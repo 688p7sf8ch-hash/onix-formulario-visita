@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<title>Visita Técnica — Onix System</title>
+<meta name="description" content="Formulario de visita técnica de Onix System">
+<meta name="theme-color" content="#010326">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Onix Visitas">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  :root{
+    --navy:#010326;
+    --green:#06664E;
+    --orange:#F25116;
+    --bg:#f2f4f3;
+    --card:#ffffff;
+    --border:#e2e5e2;
+    --text:#171a1f;
+    --muted:#6b7178;
+    --field-bg:#fafbfa;
+    --danger:#c0392b;
+    --danger-bg:#fdecea;
+    --ok-bg:#e6f5ee;
+    --ok:#0e7a4f;
+    --radius:16px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+    overscroll-behavior-y:none;
+  }
+  .app{
+    max-width:560px;
+    margin:0 auto;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg);
+  }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--navy);
+    padding-top:calc(10px + var(--safe-top));
+    padding-bottom:12px;
+  }
+  .topbar-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+  }
+  .icon-btn{
+    appearance:none;
+    border:none;
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    font-size:20px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .icon-btn:active{background:rgba(255,255,255,0.18);}
+  .icon-btn.hidden{visibility:hidden;}
+  .progress-wrap{flex:1;min-width:0;}
+  .progress-track{
+    background:rgba(255,255,255,0.14);
+    height:6px;
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:8%;
+    background:linear-gradient(90deg,var(--green),var(--orange));
+    border-radius:6px;
+    transition:width .25s ease;
+  }
+  .progress-label{
+    color:#aab1c8;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.3px;
+    margin-top:5px;
+  }
+
+  /* ---- Steps ---- */
+  .steps{flex:1;position:relative;}
+  .step{
+    display:none;
+    padding:22px 18px 28px;
+    animation:fadein .22s ease;
+  }
+  .step.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  .step-eyebrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--green);
+    font-weight:700;
+    font-size:11.5px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .step-eyebrow svg{width:16px;height:16px;stroke:var(--green);}
+  .step-title{
+    font-size:22px;
+    font-weight:800;
+    margin:0 0 4px;
+    letter-spacing:-.2px;
+  }
+  .step-sub{
+    color:var(--muted);
+    font-size:13.5px;
+    line-height:1.5;
+    margin:0 0 20px;
+  }
+
+  .brand-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .brand-row img{width:38px;height:38px;border-radius:9px;}
+  .brand-row .brand-name{font-weight:800;font-size:14px;letter-spacing:1.5px;color:var(--navy);}
+  .brand-row .brand-sub{font-size:11.5px;color:var(--muted);}
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-weight:600;
+    font-size:13px;
+    color:#3d4148;
+    margin-bottom:6px;
+  }
+  .field .hint{display:block;font-size:11.5px;color:var(--muted);margin-top:5px;}
+  input, select, textarea{
+    width:100%;
+    padding:13px 14px;
+    border-radius:12px;
+    border:1.5px solid var(--border);
+    font-size:16px;
+    font-family:inherit;
+    color:var(--text);
+    background:var(--field-bg);
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--green);
+    background:#fff;
+  }
+  textarea{resize:vertical;min-height:110px;}
+  select{appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    background-size:18px;
+    padding-right:38px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .field.invalid input, .field.invalid select{border-color:var(--danger);background:var(--danger-bg);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+  /* ---- System picker cards ---- */
+  .system-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+  .system-opt{position:relative;}
+  .system-opt input{
+    position:absolute;opacity:0;width:100%;height:100%;margin:0;top:0;left:0;cursor:pointer;
+  }
+  .system-card{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+    padding:16px 14px;
+    border-radius:14px;
+    border:1.5px solid var(--border);
+    background:#fff;
+    min-height:92px;
+    justify-content:center;
+  }
+  .system-card svg{width:24px;height:24px;stroke:var(--navy);flex-shrink:0;}
+  .system-card .system-name{font-weight:700;font-size:13.5px;line-height:1.25;}
+  .system-opt input:checked + .system-card{
+    border-color:var(--green);
+    background:#f2faf6;
+    box-shadow:0 0 0 1.5px var(--green) inset;
+  }
+  .system-opt input:checked + .system-card svg{stroke:var(--green);}
+  .system-opt input:focus-visible + .system-card{outline:2px solid var(--orange);outline-offset:2px;}
+
+  /* ---- Checkbox rows (used inside system panels) ---- */
+  .check-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+  .check-pill{position:relative;}
+  .check-pill input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .check-pill span{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:9px 14px;border-radius:999px;border:1.5px solid var(--border);
+    background:#fff;font-size:13.3px;font-weight:600;color:#3d4148;
+  }
+  .check-pill input:checked + span{
+    border-color:var(--orange);background:#fff3ee;color:#b8380f;
+  }
+
+  .panel-card{
+    background:#f7f9f7;
+    border:1.5px solid #06664E26;
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .panel-card-title{
+    font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--green);margin-bottom:12px;
+  }
+
+  .group-card{
+    background:#fff;border:1.5px solid var(--border);border-radius:14px;
+    padding:14px;margin-bottom:12px;
+  }
+  .group-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .group-card-head strong{color:var(--green);font-size:13px;}
+  .btn-remove{
+    background:none;border:none;color:var(--danger);font-size:12.5px;font-weight:700;
+    padding:6px 4px;cursor:pointer;
+  }
+  .btn-add-dashed{
+    width:100%;
+    background:#fff;
+    border:1.5px dashed var(--green);
+    color:var(--green);
+    font-weight:700;
+    font-size:13.5px;
+    padding:13px;
+    border-radius:12px;
+    cursor:pointer;
+  }
+  .helper-box{
+    background:#eef6f2;border:1px solid #06664E26;border-radius:12px;
+    padding:12px 14px;font-size:12.6px;color:#33413c;line-height:1.55;margin-bottom:14px;
+  }
+  .helper-box b{color:var(--green);}
+
+  /* ---- Resumen ---- */
+  .summary-block{
+    background:#fff;border:1.5px solid var(--border);border-radius:14px;
+    padding:14px 16px;margin-bottom:12px;
+  }
+  .summary-block h4{
+    margin:0 0 8px;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--green);
+  }
+  .summary-block p{margin:0 0 4px;font-size:14px;line-height:1.5;}
+  .summary-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .summary-chip{
+    background:#f2faf6;border:1px solid #06664E33;color:#0b4a37;
+    font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;
+  }
+  .toggle-detail{
+    background:none;border:none;color:var(--orange);font-weight:700;font-size:13px;
+    padding:6px 0;cursor:pointer;margin-top:2px;
+  }
+  .detail-pre{
+    display:none;
+    background:var(--navy);color:#dbe2f5;border-radius:12px;padding:16px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px;line-height:1.6;white-space:pre-wrap;margin-top:10px;
+    max-height:340px;overflow:auto;
+  }
+  .detail-pre.show{display:block;}
+
+  .status-banner{
+    display:none;
+    border-radius:12px;padding:12px 14px;font-size:13.5px;font-weight:600;
+    margin-top:14px;
+  }
+  .status-banner.show{display:block;}
+  .status-banner.sending{background:#fff6e0;color:#8a6100;}
+  .status-banner.ok{background:var(--ok-bg);color:var(--ok);}
+  .status-banner.error{background:var(--danger-bg);color:var(--danger);}
+  .btn-copy-fallback{
+    display:none;
+    width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1.5px solid var(--border);
+    background:#fff;color:var(--text);font-weight:700;font-size:13.5px;cursor:pointer;
+  }
+  .btn-copy-fallback.show{display:block;}
+
+  /* ---- Bottom bar ---- */
+  .bottombar{
+    position:sticky;bottom:0;z-index:20;
+    background:linear-gradient(180deg,rgba(242,244,243,0),var(--bg) 24%);
+    padding:14px 18px calc(16px + var(--safe-bottom));
+  }
+  .btn-primary{
+    width:100%;
+    background:var(--orange);
+    color:#fff;border:none;
+    padding:16px;
+    font-size:16px;font-weight:800;letter-spacing:.3px;
+    border-radius:14px;
+    cursor:pointer;
+    box-shadow:0 8px 18px -6px rgba(242,81,22,.55);
+  }
+  .btn-primary:active{background:#d4420f;}
+  .btn-primary:disabled{background:#a9adb3;box-shadow:none;cursor:not-allowed;}
+
+  /* ---- Done screen ---- */
+  .done-wrap{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:32px 26px;
+  }
+  .done-check{
+    width:84px;height:84px;border-radius:50%;
+    background:var(--ok-bg);display:flex;align-items:center;justify-content:center;margin-bottom:18px;
+  }
+  .done-check svg{width:44px;height:44px;stroke:var(--ok);}
+  .done-wrap h2{margin:0 0 8px;font-size:21px;}
+  .done-wrap p{margin:0 0 26px;color:var(--muted);font-size:14px;line-height:1.6;max-width:320px;}
+  .btn-secondary{
+    background:#fff;border:1.5px solid var(--border);color:var(--text);
+    padding:14px 22px;border-radius:14px;font-weight:700;font-size:14px;cursor:pointer;
+  }
+
+  @media (min-width:640px){
+    .app{margin-top:24px;margin-bottom:24px;min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);
+      border-radius:24px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(1,3,38,.35);}
+    .topbar{padding-top:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="topbar" id="topbar">
+    <div class="topbar-row">
+      <button class="icon-btn" id="btnBack" aria-label="Atrás">‹</button>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label" id="progressLabel">Paso 1 de 9</div>
+      </div>
+    </div>
+  </div>
+
+  <main class="steps" id="steps">
+
+    <!-- CLIENTE -->
+    <section class="step" data-step="cliente">
+      <div class="brand-row">
+        <img src="icon-192.png" alt="Onix System">
+        <div>
+          <div class="brand-name">ONIX SYSTEM</div>
+          <div class="brand-sub">Formulario de visita técnica</div>
+        </div>
+      </div>
+      <div class="step-title">¿A quién visitaste?</div>
+      <p class="step-sub">Completá los datos del cliente. El resto lo vas a poder cargar en los próximos pasos.</p>
+
+      <div class="field" id="f_cliente_nombre">
+        <label>Nombre del cliente</label>
+        <input type="text" id="cliente_nombre" placeholder="Ej: Juan García" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Dirección</label>
+        <input type="text" id="cliente_direccion" placeholder="Ej: Av. 18 de Julio 1234, Montevideo" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Fecha de visita</label>
+        <input type="date" id="fecha_visita">
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Moneda del presupuesto</label>
+          <select id="moneda">
+            <option value="USD">USD (dólares)</option>
+            <option value="UYU">UYU (pesos)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Presupuesto del cliente</label>
+          <input type="text" id="presupuesto_cliente" placeholder="Ej: USD 800">
+        </div>
+      </div>
+    </section>
+
+    <!-- SISTEMAS -->
+    <section class="step" data-step="sistemas">
+      <div class="step-eyebrow">2 · Sistemas</div>
+      <div class="step-title">¿Qué sistemas instalamos?</div>
+      <p class="step-sub">Podés elegir más de uno — se abre un paso por cada uno.</p>
+
+      <div class="system-grid">
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_wifi">
+          <label for="tipo_wifi" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            <span class="system-name">Cámaras WiFi</span>
+          </label>
+        </div>
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_ip">
+          <label for="tipo_ip" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+            <span class="system-name">Cámaras IP (NVR)</span>
+          </label>
+        </div>
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_analog">
+          <label for="tipo_analog" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+            <span class="system-name">Analógico (DVR)</span>
+          </label>
+        </div>
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_video">
+          <label for="tipo_video" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <span class="system-name">Videoportería</span>
+          </label>
+        </div>
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_alarma">
+          <label for="tipo_alarma" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span class="system-name">Alarma</span>
+          </label>
+        </div>
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_portero2h">
+          <label for="tipo_portero2h" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span class="system-name">Portero (2 hilos)</span>
+          </label>
+        </div>
+        <div class="system-opt">
+          <input type="checkbox" id="tipo_control_acceso">
+          <label for="tipo_control_acceso" class="system-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5 19 11"/><path d="M18 4l2.5 2.5"/></svg>
+            <span class="system-name">Control de acceso</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- WIFI -->
+    <section class="step" data-step="wifi">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        Cámaras WiFi
+      </div>
+      <div class="step-title">Sistema WiFi</div>
+      <p class="step-sub">Cámaras standalone que graban en su propia tarjeta de memoria.</p>
+
+      <div class="field" id="f_wifi_camaras"><label>Cantidad de cámaras</label><input type="number" id="wifi_camaras" min="1" inputmode="numeric" placeholder="Ej: 3"></div>
+      <div class="grid2">
+        <div class="field"><label>Exterior (IP67)</label><input type="number" id="wifi_camaras_ext" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Interior</label><input type="number" id="wifi_camaras_int" min="0" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="field">
+        <label>Tarjeta de memoria por cámara</label>
+        <select id="wifi_sd">
+          <option value="">A definir según precio</option>
+          <option value="32GB">32 GB</option>
+          <option value="64GB">64 GB</option>
+          <option value="128GB">128 GB</option>
+          <option value="256GB">256 GB</option>
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>¿Repetidor WiFi?</label>
+          <select id="wifi_repetidor"><option value="si">Sí</option><option value="no">No</option></select>
+        </div>
+        <div class="field">
+          <label>¿UPS?</label>
+          <select id="wifi_ups"><option value="no">No</option><option value="si">Sí</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Metros de cable de corriente</label>
+        <input type="number" id="wifi_cable" min="0" inputmode="numeric" placeholder="Ej: 15">
+        <span class="hint">Consultar en visita — varía por tomacorriente</span>
+      </div>
+      <div class="field">
+        <label>Marca / modelo preferido (opcional)</label>
+        <select id="wifi_marca">
+          <option value="">Sin preferencia</option>
+          <option value="EZVIZ">EZVIZ</option>
+          <option value="Hikvision">Hikvision</option>
+          <option value="HiLook">HiLook</option>
+          <option value="Dahua">Dahua</option>
+          <option value="Intelbras">Intelbras</option>
+          <option value="Otra">Otra (aclarar en notas)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- IP -->
+    <section class="step" data-step="ip">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        Cámaras IP
+      </div>
+      <div class="step-title">Sistema IP (NVR)</div>
+      <p class="step-sub">Cámaras en red conectadas a un grabador NVR.</p>
+
+      <div class="field" id="f_ip_camaras"><label>Cantidad de cámaras</label><input type="number" id="ip_camaras" min="1" inputmode="numeric" placeholder="Ej: 6"></div>
+      <div class="grid2">
+        <div class="field"><label>Exterior (IP67)</label><input type="number" id="ip_camaras_ext" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Interior</label><input type="number" id="ip_camaras_int" min="0" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>NVR (canales)</label>
+          <select id="ip_nvr">
+            <option value="">A definir</option>
+            <option value="4">4 canales</option>
+            <option value="8">8 canales</option>
+            <option value="16">16 canales</option>
+            <option value="32">32 canales</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Disco duro</label>
+          <select id="ip_disco">
+            <option value="">A definir</option>
+            <option value="1TB">1 TB</option>
+            <option value="2TB">2 TB</option>
+            <option value="4TB">4 TB</option>
+            <option value="6TB">6 TB</option>
+            <option value="8TB">8 TB</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Switch PoE (puertos)</label>
+          <select id="ip_switch">
+            <option value="">A definir</option>
+            <option value="Sin switch">Sin switch</option>
+            <option value="4p">4 puertos</option>
+            <option value="8p">8 puertos</option>
+            <option value="16p">16 puertos</option>
+            <option value="24p">24 puertos</option>
+          </select>
+        </div>
+        <div class="field"><label>Metros de cable UTP</label><input type="number" id="ip_cable" min="0" inputmode="numeric" placeholder="Ej: 80"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Marca preferida</label>
+          <select id="ip_marca">
+            <option value="">Sin preferencia</option>
+            <option value="Hikvision">Hikvision</option>
+            <option value="HiLook">HiLook</option>
+            <option value="Dahua">Dahua</option>
+            <option value="EZVIZ">EZVIZ</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Tiandy">Tiandy</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>¿UPS?</label>
+          <select id="ip_ups"><option value="no">No</option><option value="si">Sí</option></select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANALOG -->
+    <section class="step" data-step="analog">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        Cámaras Analógicas
+      </div>
+      <div class="step-title">Sistema Analógico (DVR)</div>
+
+      <div class="field" id="f_analog_camaras"><label>Cantidad de cámaras</label><input type="number" id="analog_camaras" min="1" inputmode="numeric" placeholder="Ej: 4"></div>
+      <div class="grid2">
+        <div class="field"><label>Exterior (IP67)</label><input type="number" id="analog_camaras_ext" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Interior</label><input type="number" id="analog_camaras_int" min="0" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>DVR (canales)</label>
+          <select id="analog_dvr">
+            <option value="">A definir</option>
+            <option value="4">4 canales</option>
+            <option value="8">8 canales</option>
+            <option value="16">16 canales</option>
+            <option value="32">32 canales</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Disco duro</label>
+          <select id="analog_disco">
+            <option value="">A definir</option>
+            <option value="1TB">1 TB</option>
+            <option value="2TB">2 TB</option>
+            <option value="4TB">4 TB</option>
+            <option value="6TB">6 TB</option>
+            <option value="8TB">8 TB</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Metros de cable</label><input type="number" id="analog_cable" min="0" inputmode="numeric" placeholder="Ej: 60"></div>
+        <div class="field"><label>Metros de ducto</label><input type="number" id="analog_ducto" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Marca preferida</label>
+          <select id="analog_marca">
+            <option value="">Sin preferencia</option>
+            <option value="Hikvision">Hikvision</option>
+            <option value="HiLook">HiLook</option>
+            <option value="Dahua">Dahua</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Vanguard">Vanguard</option>
+            <option value="Tiandy">Tiandy</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>¿UPS?</label>
+          <select id="analog_ups"><option value="no">No</option><option value="si">Sí</option></select>
+        </div>
+      </div>
+    </section>
+
+    <!-- GRUPOS DE CÁMARAS -->
+    <section class="step" data-step="camgroups">
+      <div class="step-eyebrow">Requisitos de cámaras</div>
+      <div class="step-title">Agrupá las cámaras por lo que necesitan</div>
+      <div class="helper-box">
+        Ej: <b>2 con reconocimiento facial</b> + <b>4 comunes</b>. Se cotiza cada grupo con la cámara más
+        barata que cumpla, así lo caro (facial, patentes, 4K...) se paga <b>solo donde hace falta</b>.
+        Tildá únicamente lo que ese grupo necesita.
+      </div>
+      <div id="grupos_container"></div>
+      <button type="button" class="btn-add-dashed" id="btnAddGrupo">+ Agregar grupo de cámaras</button>
+    </section>
+
+    <!-- VIDEOPORTERÍA -->
+    <section class="step" data-step="video">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Videoportería
+      </div>
+      <div class="step-title">Videoportería</div>
+
+      <div class="field" id="f_video_pantallas"><label>Pantallas interiores</label><input type="number" id="video_pantallas" min="1" inputmode="numeric" placeholder="Ej: 2"></div>
+      <div class="field">
+        <label>Tipo de cerradura</label>
+        <select id="video_cerradura">
+          <option value="">Seleccionar</option>
+          <option value="electroiman">Electroimán</option>
+          <option value="cerrojo">Cerrojo eléctrico</option>
+          <option value="ambos">Ambos</option>
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Metros de cable</label><input type="number" id="video_cable" min="0" inputmode="numeric" placeholder="Ej: 30"></div>
+        <div class="field">
+          <label>¿UPS?</label>
+          <select id="video_ups"><option value="no">No</option><option value="si">Sí</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Marca preferida (opcional)</label>
+        <select id="video_marca">
+          <option value="">Sin preferencia</option>
+          <option value="Hikvision">Hikvision</option>
+          <option value="Intelbras">Intelbras</option>
+          <option value="Dahua">Dahua</option>
+          <option value="Otra">Otra (aclarar en notas)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Observaciones específicas</label>
+        <input type="text" id="video_obs" placeholder="Ej: edificio, casa, cantidad de pisos">
+      </div>
+    </section>
+
+    <!-- ALARMA -->
+    <section class="step" data-step="alarma">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Alarma
+      </div>
+      <div class="step-title">Sistema de Alarma</div>
+
+      <div class="field">
+        <label>Marca</label>
+        <select id="alarma_marca">
+          <option value="">Seleccionar</option>
+          <option value="Hikvision AX PRO">Hikvision AX PRO (inalámbrica)</option>
+          <option value="Intelbras">Intelbras</option>
+        </select>
+      </div>
+      <div class="field" id="alarma_conexion_wrap" style="display:none">
+        <label>Tipo de conexión (Intelbras)</label>
+        <select id="alarma_conexion">
+          <option value="inalambrica">Inalámbrica</option>
+          <option value="cableada">Cableada (UTP)</option>
+          <option value="mixta">Mixta</option>
+        </select>
+      </div>
+      <div class="field" id="alarma_cable_wrap" style="display:none">
+        <label>Metros de cable UTP</label>
+        <input type="number" id="alarma_cable_utp" min="0" inputmode="numeric" placeholder="Ej: 40">
+        <span class="hint">Cable UTP Cat 5e — USD 1/m (IVA incluido)</span>
+      </div>
+
+      <div class="grid3">
+        <div class="field"><label>Puerta/ventana</label><input type="number" id="alarma_sensor_puerta" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>PIR interior</label><input type="number" id="alarma_sensor_mov_int" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>PIR exterior</label><input type="number" id="alarma_sensor_mov_ext" min="0" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Sirenas</label><input type="number" id="alarma_sirena" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Teclados</label><input type="number" id="alarma_teclado" min="0" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Controles remotos</label><input type="number" id="alarma_control" min="0" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Central incluida</label>
+          <select id="alarma_central"><option value="si">Sí</option><option value="no">No (ya tiene)</option></select>
+        </div>
+        <div class="field">
+          <label>Batería de respaldo</label>
+          <select id="alarma_bateria"><option value="si">Sí</option><option value="no">No</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Observaciones de alarma</label>
+        <input type="text" id="alarma_obs" placeholder="Ej: ampliación de sistema existente, zona específica...">
+      </div>
+    </section>
+
+    <!-- PORTERO 2 HILOS -->
+    <section class="step" data-step="portero2h">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Portero
+      </div>
+      <div class="step-title">Portero (2 hilos, audio)</div>
+      <p class="step-sub">Portero convencional solo audio (sin pantalla/video) — típico de edificios de apartamentos.</p>
+
+      <div class="field" id="f_portero2h_aptos"><label>Cantidad de apartamentos/estaciones</label><input type="number" id="portero2h_aptos" min="1" inputmode="numeric" placeholder="Ej: 15"></div>
+      <div class="field">
+        <label>Tipo de cerradura</label>
+        <select id="portero2h_cerradura">
+          <option value="">Seleccionar</option>
+          <option value="electroiman">Electroimán</option>
+          <option value="cerrojo">Cerrojo eléctrico</option>
+          <option value="ambos">Ambos</option>
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Metros de cable (2 hilos)</label><input type="number" id="portero2h_cable" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
+        <div class="field">
+          <label>¿UPS?</label>
+          <select id="portero2h_ups"><option value="no">No</option><option value="si">Sí</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Marca preferida (opcional)</label>
+        <select id="portero2h_marca">
+          <option value="">Sin preferencia</option>
+          <option value="Intelbras">Intelbras</option>
+          <option value="Otra">Otra (aclarar en notas)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Observaciones específicas</label>
+        <input type="text" id="portero2h_obs" placeholder="Ej: cantidad de pisos, frente a empotrar/sobreponer">
+      </div>
+    </section>
+
+    <!-- CONTROL DE ACCESO -->
+    <section class="step" data-step="ctrlacceso">
+      <div class="step-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5 19 11"/></svg>
+        Control de acceso
+      </div>
+      <div class="step-title">Control de Acceso</div>
+      <p class="step-sub">Puerta peatonal con cerradura eléctrica controlada por credencial.</p>
+
+      <div class="field" id="f_ctrlacceso_puertas"><label>Cantidad de puertas/puntos</label><input type="number" id="ctrlacceso_puertas" min="1" inputmode="numeric" placeholder="Ej: 2"></div>
+      <div class="grid2">
+        <div class="field">
+          <label>Sentido</label>
+          <select id="ctrlacceso_sentido">
+            <option value="solo_entrada">Solo entrada (1 lectora)</option>
+            <option value="entrada_salida">Entrada y salida (2 lectoras)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tipo de cerradura</label>
+          <select id="ctrlacceso_cerradura">
+            <option value="">Seleccionar</option>
+            <option value="electroiman">Electroimán</option>
+            <option value="cerrojo">Cerrojo eléctrico</option>
+            <option value="ambos">Ambos</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo de credencial (puede ser más de una)</label>
+        <div class="check-grid">
+          <label class="check-pill"><input type="checkbox" id="ctrlacceso_rfid"><span>Tarjeta/tag RFID</span></label>
+          <label class="check-pill"><input type="checkbox" id="ctrlacceso_huella"><span>Huella dactilar</span></label>
+          <label class="check-pill"><input type="checkbox" id="ctrlacceso_facial"><span>Facial</span></label>
+          <label class="check-pill"><input type="checkbox" id="ctrlacceso_pin"><span>Clave/PIN o app</span></label>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Marca preferida (opcional)</label>
+          <select id="ctrlacceso_marca">
+            <option value="">Sin preferencia</option>
+            <option value="Hikvision">Hikvision</option>
+            <option value="ZKTeco">ZKTeco</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
+        </div>
+        <div class="field"><label>Metros de cable</label><input type="number" id="ctrlacceso_cable" min="0" inputmode="numeric" placeholder="Ej: 15"></div>
+      </div>
+      <div class="field">
+        <label>¿UPS?</label>
+        <select id="ctrlacceso_ups"><option value="no">No</option><option value="si">Sí</option></select>
+      </div>
+      <div class="field">
+        <label>Observaciones específicas</label>
+        <input type="text" id="ctrlacceso_obs" placeholder="Ej: integración con nómina de usuarios, molinete existente...">
+      </div>
+    </section>
+
+    <!-- DAISA -->
+    <section class="step" data-step="daisa">
+      <div class="step-eyebrow">Cableado</div>
+      <div class="step-title">Daisa y ducto (general)</div>
+      <p class="step-sub">Si ya cargaste metros de cable en la sección del sistema, dejá esto en 0. Es solo para lo adicional o compartido entre sistemas.</p>
+
+      <div class="grid2">
+        <div class="field"><label>Metros de caño daisa</label><input type="number" id="daisa_metros" min="0" value="0" inputmode="numeric"><span class="hint">Se consigue en Fivisa</span></div>
+        <div class="field"><label>Metros de ducto</label><input type="number" id="ducto_metros" min="0" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="field">
+        <label>¿Gabinete necesario?</label>
+        <select id="gabinete"><option value="no">No</option><option value="si">Sí (Balanir)</option></select>
+      </div>
+      <div id="daisa_accesorios_row" style="display:none">
+        <div class="grid3">
+          <div class="field"><label>Codos</label><input type="number" id="daisa_codos" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Grampas</label><input type="number" id="daisa_grampas" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Uniones</label><input type="number" id="daisa_uniones" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="field"><label>Corrugados</label><input type="number" id="daisa_corrugados" min="0" value="0" inputmode="numeric"></div>
+      </div>
+    </section>
+
+    <!-- LOGISTICA -->
+    <section class="step" data-step="logistica">
+      <div class="step-eyebrow">Mano de obra</div>
+      <div class="step-title">Horas y logística</div>
+
+      <div class="field" id="f_horas">
+        <label>Horas de trabajo estimadas</label>
+        <input type="number" id="horas" min="0.5" step="0.5" inputmode="decimal" placeholder="Ej: 4">
+        <span class="hint">USD 50/hora</span>
+      </div>
+      <div class="field">
+        <label>Kilómetros desde el taller</label>
+        <input type="number" id="km" min="0" inputmode="numeric" placeholder="Ej: 12">
+        <span class="hint">1 litro cada 15 km — se calcula con el precio ANCAP del día</span>
+      </div>
+      <div class="field">
+        <label>¿Pasa las 4 horas de trabajo?</label>
+        <select id="comida">
+          <option value="auto">Detectar automáticamente</option>
+          <option value="si">Sí (incluir $500 UYU comida)</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- NOTAS -->
+    <section class="step" data-step="notas">
+      <div class="step-eyebrow">Último paso</div>
+      <div class="step-title">Notas de la visita</div>
+      <p class="step-sub">Poné acá todo lo relevante en un solo lugar.</p>
+
+      <div class="field">
+        <textarea id="notas" placeholder="Lo que el cliente necesita/pidió, diferencia entre la opción económica y la mejor, contexto (local, robo previo, días de grabación), marcas o modelos puntuales, y cualquier detalle de la visita. Ej: local comercial, tuvo robo hace 3 meses, quiere ver desde el celu, cámaras de exterior a color. Económica HiLook 2MP / mejor Hikvision AcuSense 4MP."></textarea>
+      </div>
+    </section>
+
+    <!-- RESUMEN -->
+    <section class="step" data-step="resumen">
+      <div class="step-eyebrow">Revisión final</div>
+      <div class="step-title">Confirmá antes de enviar</div>
+      <div id="resumenContent"></div>
+
+      <button type="button" class="toggle-detail" id="btnToggleDetail">Ver detalle técnico completo ▾</button>
+      <pre class="detail-pre" id="detailPre"></pre>
+
+      <div class="status-banner" id="statusBanner"></div>
+      <button type="button" class="btn-copy-fallback" id="btnCopyFallback">Copiar texto al portapapeles</button>
+    </section>
+
+    <!-- DONE -->
+    <section class="step" data-step="done">
+      <div class="done-wrap">
+        <div class="done-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h2>Visita enviada</h2>
+        <p>El presupuesto se prepara automáticamente. Podés cargar otra visita cuando quieras.</p>
+        <button type="button" class="btn-secondary" id="btnNuevaVisita">Cargar otra visita</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bottombar" id="bottombar">
+    <button class="btn-primary" id="btnNext">Siguiente →</button>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+
+  // ───────────────────────── helpers ─────────────────────────
+  function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function numVal(id){ const n = parseFloat(val(id)); return isNaN(n) ? 0 : n; }
+  function numOrNull(id){ const v = val(id); if (v === '') return null; const n = parseFloat(v); return isNaN(n) ? null : n; }
+  function chk(id){ const el = document.getElementById(id); return !!(el && el.checked); }
+  function setFieldInvalid(fieldId, invalid){
+    const el = document.getElementById(fieldId);
+    if (el) el.classList.toggle('invalid', invalid);
+  }
+
+  let toastTimer = null;
+  function toast(msg){
+    let el = document.getElementById('toastMsg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toastMsg';
+      el.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);' +
+        'background:#171a1f;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;' +
+        'font-weight:600;z-index:60;box-shadow:0 8px 20px -6px rgba(0,0,0,.4);max-width:88%;text-align:center;transition:opacity .2s;';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.style.opacity = '0'; }, 2400);
+  }
+
+  // ───────────────────────── grupos de cámaras ─────────────────────────
+  let grupoCamSeq = 0;
+  function agregarGrupoCamara(){
+    grupoCamSeq++;
+    const cont = document.getElementById('grupos_container');
+    const div = document.createElement('div');
+    div.className = 'group-card';
+    div.innerHTML =
+      '<div class="group-card-head"><strong>Grupo ' + grupoCamSeq + '</strong>' +
+      '<button type="button" class="btn-remove" data-remove-grupo>✕ quitar</button></div>' +
+      '<div class="field"><label>Cantidad de cámaras</label><input type="number" class="g-cantidad" min="1" inputmode="numeric" placeholder="Ej: 2"></div>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>Resolución mínima</label><select class="g-resolucion"><option value="">Sin preferencia</option><option value="2MP">2 MP</option><option value="4MP">4 MP</option><option value="5MP">5 MP</option><option value="8MP">8 MP (4K)</option></select></div>' +
+        '<div class="field"><label>Visión nocturna (m)</label><input type="number" class="g-ir" min="0" inputmode="numeric" placeholder="Ej: 30"></div>' +
+      '</div>' +
+      '<div class="field"><label>Este grupo necesita</label>' +
+        '<div class="check-grid">' +
+          '<label class="check-pill"><input type="checkbox" class="g-audio"><span>Audio</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-exterior"><span>Exterior (IP66+)</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-color"><span>Color nocturno</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-ia"><span>IA / AcuSense</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-facial"><span>Facial</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-lpr"><span>Lectura de patentes</span></label>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field"><label>Área / distancia a cubrir (opcional)</label><input type="text" class="g-area" placeholder="Ej: portón a 15m, pasillo 8m"></div>';
+    cont.appendChild(div);
+    div.querySelector('[data-remove-grupo]').addEventListener('click', function(){ div.remove(); });
+  }
+  document.getElementById('btnAddGrupo').addEventListener('click', agregarGrupoCamara);
+  function ensureAtLeastOneGrupo(){
+    if (document.querySelectorAll('#grupos_container .group-card').length === 0) agregarGrupoCamara();
+  }
+
+  // ───────────────────────── alarma conditionals ─────────────────────────
+  document.getElementById('alarma_marca').addEventListener('change', function(){
+    const marca = this.value;
+    document.getElementById('alarma_conexion_wrap').style.display = marca === 'Intelbras' ? 'block' : 'none';
+    if (marca !== 'Intelbras') document.getElementById('alarma_cable_wrap').style.display = 'none';
+    else toggleAlarmaCable();
+  });
+  document.getElementById('alarma_conexion').addEventListener('change', toggleAlarmaCable);
+  function toggleAlarmaCable(){
+    const conexion = val('alarma_conexion');
+    document.getElementById('alarma_cable_wrap').style.display = (conexion === 'cableada' || conexion === 'mixta') ? 'block' : 'none';
+  }
+
+  // ───────────────────────── daisa conditional ─────────────────────────
+  document.getElementById('daisa_metros').addEventListener('input', function(){
+    document.getElementById('daisa_accesorios_row').style.display = parseFloat(this.value) > 0 ? 'block' : 'none';
+  });
+
+  // ───────────────────────── datos JSON estructurado (onix-visita-v1) ─────────────────────────
+  function construirDatosJSON(){
+    const horas = numVal('horas');
+    const comidaVal = val('comida');
+    const incluirComida = comidaVal === 'si' || (comidaVal === 'auto' && horas > 4);
+
+    return {
+      _schema: 'onix-visita-v1',
+      cliente: {
+        nombre: val('cliente_nombre'),
+        direccion: val('cliente_direccion'),
+        fecha_visita: val('fecha_visita'),
+        moneda_preferida: val('moneda'),
+        presupuesto_cliente: numOrNull('presupuesto_cliente')
+      },
+      sistemas: {
+        wifi: chk('tipo_wifi'), ip: chk('tipo_ip'), analog: chk('tipo_analog'),
+        video: chk('tipo_video'), alarma: chk('tipo_alarma'),
+        portero2h: chk('tipo_portero2h'), control_acceso: chk('tipo_control_acceso')
+      },
+      wifi: !chk('tipo_wifi') ? null : {
+        camaras: numVal('wifi_camaras'), camaras_ext: numVal('wifi_camaras_ext'), camaras_int: numVal('wifi_camaras_int'),
+        sd: val('wifi_sd') || null, repetidor: val('wifi_repetidor'), cable_corriente: numVal('wifi_cable'),
+        marca: val('wifi_marca') || null, ups: val('wifi_ups')
+      },
+      ip: !chk('tipo_ip') ? null : {
+        camaras: numVal('ip_camaras'), camaras_ext: numVal('ip_camaras_ext'), camaras_int: numVal('ip_camaras_int'),
+        nvr_canales: numOrNull('ip_nvr'), disco: val('ip_disco') || null, switch_poe: val('ip_switch') || null,
+        cable_utp: numVal('ip_cable'), marca: val('ip_marca') || null, ups: val('ip_ups')
+      },
+      analog: !chk('tipo_analog') ? null : {
+        camaras: numVal('analog_camaras'), camaras_ext: numVal('analog_camaras_ext'), camaras_int: numVal('analog_camaras_int'),
+        dvr_canales: numOrNull('analog_dvr'), disco: val('analog_disco') || null, cable: numVal('analog_cable'),
+        ducto: numVal('analog_ducto'), marca: val('analog_marca') || null, ups: val('analog_ups')
+      },
+      video: !chk('tipo_video') ? null : {
+        pantallas: numVal('video_pantallas'), cerradura: val('video_cerradura'), cable: numVal('video_cable'),
+        marca: val('video_marca') || null, obs: val('video_obs') || null, ups: val('video_ups')
+      },
+      alarma: !chk('tipo_alarma') ? null : {
+        marca: val('alarma_marca') || null,
+        conexion: (val('alarma_marca').toLowerCase().includes('hikvision')) ? 'inalambrica' : (val('alarma_conexion') || null),
+        cable_utp: numVal('alarma_cable_utp'), central: val('alarma_central'),
+        sensor_puerta: numVal('alarma_sensor_puerta'), sensor_mov_int: numVal('alarma_sensor_mov_int'),
+        sensor_mov_ext: numVal('alarma_sensor_mov_ext'), sirena: numVal('alarma_sirena'),
+        teclado: numVal('alarma_teclado'), control: numVal('alarma_control'),
+        bateria: val('alarma_bateria'), obs: val('alarma_obs') || null
+      },
+      portero2h: !chk('tipo_portero2h') ? null : {
+        aptos: numVal('portero2h_aptos'), cerradura: val('portero2h_cerradura'), cable: numVal('portero2h_cable'),
+        marca: val('portero2h_marca') || null, obs: val('portero2h_obs') || null, ups: val('portero2h_ups')
+      },
+      control_acceso: !chk('tipo_control_acceso') ? null : {
+        puertas: numVal('ctrlacceso_puertas'), sentido: val('ctrlacceso_sentido'), cerradura: val('ctrlacceso_cerradura'),
+        credencial: {
+          rfid: chk('ctrlacceso_rfid'), huella: chk('ctrlacceso_huella'),
+          facial: chk('ctrlacceso_facial'), pin: chk('ctrlacceso_pin')
+        },
+        marca: val('ctrlacceso_marca') || null, cable: numVal('ctrlacceso_cable'),
+        obs: val('ctrlacceso_obs') || null, ups: val('ctrlacceso_ups')
+      },
+      grupos_camaras: !(chk('tipo_wifi') || chk('tipo_ip') || chk('tipo_analog')) ? null :
+        Array.from(document.querySelectorAll('#grupos_container .group-card')).map(function(g){
+          const q = g.querySelector('.g-cantidad').value;
+          const ir = g.querySelector('.g-ir').value;
+          return {
+            cantidad: q ? parseInt(q, 10) : 0,
+            resolucion_min: g.querySelector('.g-resolucion').value || null,
+            ir_m: ir ? parseInt(ir, 10) : null,
+            audio: g.querySelector('.g-audio').checked,
+            exterior: g.querySelector('.g-exterior').checked,
+            color_noct: g.querySelector('.g-color').checked,
+            ia: g.querySelector('.g-ia').checked,
+            facial: g.querySelector('.g-facial').checked,
+            lpr: g.querySelector('.g-lpr').checked,
+            area: g.querySelector('.g-area').value.trim() || null
+          };
+        }).filter(function(x){ return x.cantidad > 0; }),
+      daisa: {
+        metros: numVal('daisa_metros'), ducto_metros: numVal('ducto_metros'), gabinete: val('gabinete'),
+        codos: numVal('daisa_codos'), grampas: numVal('daisa_grampas'), uniones: numVal('daisa_uniones'),
+        corrugados: numVal('daisa_corrugados')
+      },
+      logistica: { horas: horas, km: numVal('km'), comida: incluirComida, extras_usd: 100 },
+      notas: val('notas') || null
+    };
+  }
+
+  // ───────────────────────── texto prompt (fallback en prosa) ─────────────────────────
+  function nombreSistemas(){
+    const s = [];
+    if (chk('tipo_wifi')) s.push('WiFi');
+    if (chk('tipo_ip')) s.push('IP (NVR)');
+    if (chk('tipo_analog')) s.push('Analógico (DVR)');
+    if (chk('tipo_video')) s.push('Videoportería');
+    if (chk('tipo_alarma')) s.push('Alarma');
+    if (chk('tipo_portero2h')) s.push('Portero 2 hilos');
+    if (chk('tipo_control_acceso')) s.push('Control de Acceso');
+    return s;
+  }
+
+  function buildPromptText(){
+    const sistemas = nombreSistemas();
+    let out = '=== DATOS DE VISITA TÉCNICA — ONIX SYSTEM ===\n\n';
+    out += 'CLIENTE: ' + val('cliente_nombre') + '\n';
+    out += 'DIRECCIÓN: ' + val('cliente_direccion') + '\n';
+    out += 'FECHA DE VISITA: ' + val('fecha_visita') + '\n';
+    out += 'MONEDA PREFERIDA: ' + val('moneda') + '\n';
+    out += 'PRESUPUESTO DISPONIBLE DEL CLIENTE: ' + (val('presupuesto_cliente') || 'No indicado') + '\n\n';
+    out += 'SISTEMAS A INSTALAR: ' + sistemas.join(' + ') + '\n\n';
+
+    if (chk('tipo_wifi')) {
+      out += '--- SISTEMA WiFi ---\n';
+      out += 'Cantidad de cámaras: ' + val('wifi_camaras') + '\n';
+      out += 'Cámaras de exterior (IP67): ' + (val('wifi_camaras_ext') || '0') + '\n';
+      out += 'Cámaras de interior: ' + (val('wifi_camaras_int') || '0') + '\n';
+      out += 'Tarjeta de memoria por cámara: ' + (val('wifi_sd') || 'a definir según precio') + '\n';
+      out += 'Repetidor WiFi necesario: ' + val('wifi_repetidor') + '\n';
+      out += 'Metros de cable de corriente: ' + (val('wifi_cable') || 'a confirmar en visita') + '\n';
+      if (val('wifi_marca')) out += 'Marcas/modelos preferidos: ' + val('wifi_marca') + '\n';
+      out += 'UPS: ' + val('wifi_ups') + '\n\n';
+    }
+    if (chk('tipo_ip')) {
+      out += '--- SISTEMA IP (NVR) ---\n';
+      out += 'Cantidad de cámaras: ' + val('ip_camaras') + '\n';
+      out += 'Cámaras de exterior (IP67): ' + (val('ip_camaras_ext') || '0') + '\n';
+      out += 'Cámaras de interior: ' + (val('ip_camaras_int') || '0') + '\n';
+      out += 'NVR: ' + (val('ip_nvr') ? val('ip_nvr') + ' canales' : 'a definir') + '\n';
+      out += 'Disco duro: ' + (val('ip_disco') || 'a definir') + '\n';
+      out += 'Switch POE: ' + (val('ip_switch') || 'a definir') + '\n';
+      out += 'Metros de cable UTP: ' + (val('ip_cable') || '0') + '\n';
+      if (val('ip_marca')) out += 'Marcas/modelos preferidos: ' + val('ip_marca') + '\n';
+      out += 'UPS: ' + val('ip_ups') + '\n\n';
+    }
+    if (chk('tipo_analog')) {
+      out += '--- SISTEMA ANALÓGICO (DVR) ---\n';
+      out += 'Cantidad de cámaras: ' + val('analog_camaras') + '\n';
+      out += 'Cámaras de exterior (IP67): ' + (val('analog_camaras_ext') || '0') + '\n';
+      out += 'Cámaras de interior: ' + (val('analog_camaras_int') || '0') + '\n';
+      out += 'DVR: ' + (val('analog_dvr') ? val('analog_dvr') + ' canales' : 'a definir') + '\n';
+      out += 'Disco duro: ' + (val('analog_disco') || 'a definir') + '\n';
+      out += 'Metros de cable: ' + (val('analog_cable') || '0') + '\n';
+      out += 'Metros de ducto: ' + (val('analog_ducto') || '0') + '\n';
+      if (val('analog_marca')) out += 'Marcas/modelos preferidos: ' + val('analog_marca') + '\n';
+      out += 'UPS: ' + val('analog_ups') + '\n\n';
+    }
+    if (chk('tipo_video')) {
+      out += '--- VIDEOPORTERÍA ---\n';
+      out += 'Pantallas interiores: ' + val('video_pantallas') + '\n';
+      out += 'Tipo de cerradura: ' + val('video_cerradura') + '\n';
+      out += 'Metros de cable: ' + (val('video_cable') || '0') + '\n';
+      if (val('video_marca')) out += 'Marca/modelo preferido: ' + val('video_marca') + '\n';
+      if (val('video_obs')) out += 'Observaciones: ' + val('video_obs') + '\n';
+      out += 'UPS: ' + val('video_ups') + '\n\n';
+    }
+    if (chk('tipo_alarma')) {
+      out += '--- SISTEMA DE ALARMA ---\n';
+      out += 'Marca: ' + (val('alarma_marca') || 'a definir') + '\n';
+      const marcaAlarma = val('alarma_marca');
+      if (marcaAlarma === 'Hikvision AX PRO') {
+        out += 'Tipo de conexión: Inalámbrica\n';
+      } else if (marcaAlarma === 'Intelbras') {
+        out += 'Tipo de conexión: ' + (val('alarma_conexion') || 'a definir') + '\n';
+        if (val('alarma_conexion') === 'cableada' || val('alarma_conexion') === 'mixta') {
+          out += 'Metros de cable UTP: ' + (val('alarma_cable_utp') || '0') + '\n';
+        }
+      }
+      out += 'Central incluida: ' + val('alarma_central') + '\n';
+      out += 'Sensores de puerta/ventana: ' + (val('alarma_sensor_puerta') || '0') + '\n';
+      out += 'Sensores de movimiento interior: ' + (val('alarma_sensor_mov_int') || '0') + '\n';
+      out += 'Sensores de movimiento exterior: ' + (val('alarma_sensor_mov_ext') || '0') + '\n';
+      out += 'Sirenas: ' + (val('alarma_sirena') || '0') + '\n';
+      out += 'Teclados: ' + (val('alarma_teclado') || '0') + '\n';
+      out += 'Controles remotos: ' + (val('alarma_control') || '0') + '\n';
+      out += 'Batería de respaldo: ' + val('alarma_bateria') + '\n';
+      if (val('alarma_obs')) out += 'Observaciones: ' + val('alarma_obs') + '\n';
+      out += '\n';
+    }
+    if (chk('tipo_portero2h')) {
+      out += '--- PORTERO (2 HILOS, AUDIO) ---\n';
+      out += 'Cantidad de apartamentos/estaciones: ' + val('portero2h_aptos') + '\n';
+      out += 'Tipo de cerradura: ' + val('portero2h_cerradura') + '\n';
+      out += 'Metros de cable: ' + (val('portero2h_cable') || '0') + '\n';
+      if (val('portero2h_marca')) out += 'Marca/modelo preferido: ' + val('portero2h_marca') + '\n';
+      if (val('portero2h_obs')) out += 'Observaciones: ' + val('portero2h_obs') + '\n';
+      out += 'UPS: ' + val('portero2h_ups') + '\n\n';
+    }
+    if (chk('tipo_control_acceso')) {
+      out += '--- CONTROL DE ACCESO ---\n';
+      out += 'Cantidad de puertas/puntos: ' + val('ctrlacceso_puertas') + '\n';
+      out += 'Sentido: ' + (val('ctrlacceso_sentido') === 'entrada_salida' ? 'Entrada y salida (2 lectoras)' : 'Solo entrada (1 lectora)') + '\n';
+      out += 'Tipo de cerradura: ' + val('ctrlacceso_cerradura') + '\n';
+      const credenciales = [];
+      if (chk('ctrlacceso_rfid')) credenciales.push('Tarjeta/tag RFID');
+      if (chk('ctrlacceso_huella')) credenciales.push('Huella dactilar');
+      if (chk('ctrlacceso_facial')) credenciales.push('Facial');
+      if (chk('ctrlacceso_pin')) credenciales.push('Clave/PIN o app celular');
+      out += 'Tipo de credencial: ' + (credenciales.length ? credenciales.join(', ') : 'a definir') + '\n';
+      if (val('ctrlacceso_marca')) out += 'Marca/modelo preferido: ' + val('ctrlacceso_marca') + '\n';
+      out += 'Metros de cable: ' + (val('ctrlacceso_cable') || '0') + '\n';
+      if (val('ctrlacceso_obs')) out += 'Observaciones: ' + val('ctrlacceso_obs') + '\n';
+      out += 'UPS: ' + val('ctrlacceso_ups') + '\n\n';
+    }
+    if (chk('tipo_wifi') || chk('tipo_ip') || chk('tipo_analog')) {
+      const grupos = Array.from(document.querySelectorAll('#grupos_container .group-card')).map(function(g){
+        const q = parseInt(g.querySelector('.g-cantidad').value, 10) || 0;
+        if (!q) return null;
+        const feats = [];
+        if (g.querySelector('.g-resolucion').value) feats.push(g.querySelector('.g-resolucion').value);
+        if (g.querySelector('.g-ir').value) feats.push('IR ' + g.querySelector('.g-ir').value + 'm');
+        if (g.querySelector('.g-audio').checked) feats.push('audio');
+        if (g.querySelector('.g-exterior').checked) feats.push('exterior IP66+');
+        if (g.querySelector('.g-color').checked) feats.push('color nocturno');
+        if (g.querySelector('.g-ia').checked) feats.push('IA/AcuSense');
+        if (g.querySelector('.g-facial').checked) feats.push('reconocimiento facial');
+        if (g.querySelector('.g-lpr').checked) feats.push('lectura de patentes');
+        const area = g.querySelector('.g-area').value.trim();
+        return q + ' cámara(s): ' + (feats.length ? feats.join(', ') : 'básicas') + (area ? ' — ' + area : '');
+      }).filter(Boolean);
+      if (grupos.length) {
+        out += '--- REQUISITOS DE CÁMARAS POR GRUPOS (cotizar cada grupo con la más barata que cumpla) ---\n';
+        grupos.forEach(function(r, i){ out += 'Grupo ' + (i + 1) + ': ' + r + '\n'; });
+        out += '\n';
+      }
+    }
+    out += '--- CABLEADO Y DAISA ---\n';
+    out += 'Metros de caño daisa (Fivisa): ' + val('daisa_metros') + '\n';
+    out += 'Metros de ducto: ' + val('ducto_metros') + '\n';
+    out += 'Gabinete (Balanir): ' + val('gabinete') + '\n';
+    if (parseFloat(val('daisa_metros')) > 0) {
+      out += 'Codos para daisa: ' + val('daisa_codos') + '\n';
+      out += 'Grampas para daisa: ' + val('daisa_grampas') + '\n';
+      out += 'Uniones para daisa: ' + val('daisa_uniones') + '\n';
+      out += 'Corrugados para daisa: ' + val('daisa_corrugados') + '\n';
+    }
+    out += '\n';
+    out += '--- MANO DE OBRA Y LOGÍSTICA ---\n';
+    out += 'Horas de trabajo: ' + val('horas') + '\n';
+    out += 'Kilómetros desde el taller: ' + val('km') + '\n';
+    const horas = parseFloat(val('horas')) || 0;
+    const comidaVal = val('comida');
+    const incluirComida = comidaVal === 'si' || (comidaVal === 'auto' && horas > 4);
+    out += '¿Incluir comida ($500 UYU)?: ' + (incluirComida ? 'Sí' : 'No') + '\n';
+    out += 'Extras fijos: USD 100 (siempre)\n\n';
+    if (val('notas')) out += '--- NOTAS ---\n' + val('notas') + '\n\n';
+    out += '=== FIN DE DATOS ===\n\n';
+    out += 'INSTRUCCIÓN: Con estos datos, seguí el flujo del agente de presupuestos de Onix System (CLAUDE.md).';
+    return out;
+  }
+
+  // ───────────────────────── resumen ─────────────────────────
+  const NOMBRE_SISTEMA_CHIP = {
+    tipo_wifi: 'Cámaras WiFi', tipo_ip: 'Cámaras IP', tipo_analog: 'Analógico',
+    tipo_video: 'Videoportería', tipo_alarma: 'Alarma', tipo_portero2h: 'Portero 2h',
+    tipo_control_acceso: 'Control de acceso'
+  };
+  function renderResumen(){
+    const chips = Object.keys(NOMBRE_SISTEMA_CHIP).filter(chk).map(function(id){
+      return '<span class="summary-chip">' + NOMBRE_SISTEMA_CHIP[id] + '</span>';
+    }).join('');
+
+    let html = '';
+    html += '<div class="summary-block"><h4>Cliente</h4>' +
+      '<p><strong>' + (val('cliente_nombre') || '—') + '</strong></p>' +
+      '<p>' + (val('cliente_direccion') || 'Sin dirección') + '</p>' +
+      '<p>' + (val('fecha_visita') || '—') + ' · Presupuesto: ' + (val('presupuesto_cliente') || 'no indicado') + '</p>' +
+      '</div>';
+
+    html += '<div class="summary-block"><h4>Sistemas</h4><div class="summary-chip-row">' + (chips || '<span class="summary-chip">Ninguno seleccionado</span>') + '</div></div>';
+
+    html += '<div class="summary-block"><h4>Mano de obra y logística</h4>' +
+      '<p>' + (val('horas') || '0') + ' h de trabajo · ' + (val('km') || '0') + ' km desde el taller</p>' +
+      '</div>';
+
+    if (val('notas')) {
+      html += '<div class="summary-block"><h4>Notas</h4><p>' + val('notas').replace(/</g,'&lt;') + '</p></div>';
+    }
+
+    document.getElementById('resumenContent').innerHTML = html;
+    document.getElementById('detailPre').textContent = buildPromptText();
+  }
+
+  document.getElementById('btnToggleDetail').addEventListener('click', function(){
+    const pre = document.getElementById('detailPre');
+    const show = !pre.classList.contains('show');
+    pre.classList.toggle('show', show);
+    this.textContent = show ? 'Ocultar detalle técnico ▴' : 'Ver detalle técnico completo ▾';
+  });
+
+  document.getElementById('btnCopyFallback').addEventListener('click', function(){
+    navigator.clipboard.writeText(buildPromptText()).then(() => {
+      this.textContent = '¡Copiado!';
+      setTimeout(() => { this.textContent = 'Copiar texto al portapapeles'; }, 2000);
+    });
+  });
+
+  // ───────────────────────── envío al backend ─────────────────────────
+  const APPS_SCRIPT_URL_FIJA = 'https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec';
+  // Clave anti-bots del POST (ver apps-script-backend.gs). No es secreta de verdad
+  // (queda visible en el código fuente de la página) — solo evita que bots/scanners
+  // genéricos manden basura a la cola de visitas.
+  const APPS_SCRIPT_POST_KEY_FIJA = 'eYTJvnwlrNVmCqFqxnVzyUUe';
+
+  function mostrarStatus(tipo, mensaje){
+    const el = document.getElementById('statusBanner');
+    el.className = 'status-banner show ' + tipo;
+    el.textContent = mensaje;
+  }
+
+  async function submitVisita(){
+    const btn = document.getElementById('btnNext');
+    btn.disabled = true;
+    document.getElementById('btnCopyFallback').classList.remove('show');
+    mostrarStatus('sending', '⏳ Enviando...');
+
+    const promptText = buildPromptText();
+    try {
+      const payload = {
+        cliente: val('cliente_nombre'),
+        fecha_visita: val('fecha_visita'),
+        sistemas: nombreSistemas().join(' + '),
+        prompt: promptText,
+        datos_json: JSON.stringify(construirDatosJSON()),
+        key: APPS_SCRIPT_POST_KEY_FIJA
+      };
+      // Apps Script requiere no-cors; la respuesta queda opaca pero igual guarda.
+      await fetch(APPS_SCRIPT_URL_FIJA, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      currentStepId = 'done';
+      render();
+    } catch (err) {
+      mostrarStatus('error', '✗ Error al enviar: ' + err.message + ' — probá de nuevo o copiá el texto.');
+      document.getElementById('btnCopyFallback').classList.add('show');
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('btnNuevaVisita').addEventListener('click', function(){
+    window.location.reload();
+  });
+
+  // ───────────────────────── wizard: pasos y navegación ─────────────────────────
+  const STEP_DEFS = [
+    { id: 'cliente' },
+    { id: 'sistemas' },
+    { id: 'wifi', show: function(){ return chk('tipo_wifi'); } },
+    { id: 'ip', show: function(){ return chk('tipo_ip'); } },
+    { id: 'analog', show: function(){ return chk('tipo_analog'); } },
+    { id: 'camgroups', show: function(){ return chk('tipo_wifi') || chk('tipo_ip') || chk('tipo_analog'); } },
+    { id: 'video', show: function(){ return chk('tipo_video'); } },
+    { id: 'alarma', show: function(){ return chk('tipo_alarma'); } },
+    { id: 'portero2h', show: function(){ return chk('tipo_portero2h'); } },
+    { id: 'ctrlacceso', show: function(){ return chk('tipo_control_acceso'); } },
+    { id: 'daisa' },
+    { id: 'logistica' },
+    { id: 'notas' },
+    { id: 'resumen' }
+  ];
+
+  const REQUIRED_FIELD = {
+    cliente: { field: 'cliente_nombre', box: 'f_cliente_nombre', msg: 'Completá el nombre del cliente' },
+    sistemas: { custom: function(){ return STEP_DEFS.slice(2, 10).some(function(s){ return s.show && s.show(); }) || Object.keys(NOMBRE_SISTEMA_CHIP).some(chk); }, msg: 'Seleccioná al menos un tipo de sistema' },
+    wifi: { field: 'wifi_camaras', box: 'f_wifi_camaras', msg: 'Completá la cantidad de cámaras' },
+    ip: { field: 'ip_camaras', box: 'f_ip_camaras', msg: 'Completá la cantidad de cámaras' },
+    analog: { field: 'analog_camaras', box: 'f_analog_camaras', msg: 'Completá la cantidad de cámaras' },
+    video: { field: 'video_pantallas', box: 'f_video_pantallas', msg: 'Completá la cantidad de pantallas' },
+    portero2h: { field: 'portero2h_aptos', box: 'f_portero2h_aptos', msg: 'Completá la cantidad de apartamentos' },
+    ctrlacceso: { field: 'ctrlacceso_puertas', box: 'f_ctrlacceso_puertas', msg: 'Completá la cantidad de puertas' },
+    logistica: { field: 'horas', box: 'f_horas', msg: 'Completá las horas de trabajo' }
+  };
+
+  function validateStep(id){
+    const rule = REQUIRED_FIELD[id];
+    if (!rule) return true;
+    const ok = rule.custom ? rule.custom() : val(rule.field) !== '';
+    if (rule.box) setFieldInvalid(rule.box, !ok);
+    if (!ok) toast(rule.msg);
+    return ok;
+  }
+
+  let currentStepId = 'cliente';
+
+  function visibleSteps(){ return STEP_DEFS.filter(function(s){ return !s.show || s.show(); }); }
+
+  function render(){
+    if (currentStepId === 'done') {
+      document.querySelectorAll('.step').forEach(function(el){ el.classList.remove('active'); });
+      document.querySelector('.step[data-step="done"]').classList.add('active');
+      document.getElementById('topbar').style.display = 'none';
+      document.getElementById('bottombar').style.display = 'none';
+      window.scrollTo(0, 0);
+      return;
+    }
+    document.getElementById('topbar').style.display = '';
+    document.getElementById('bottombar').style.display = '';
+
+    const vis = visibleSteps();
+    let idx = vis.findIndex(function(s){ return s.id === currentStepId; });
+    if (idx === -1) { idx = 0; currentStepId = vis[0].id; }
+
+    document.querySelectorAll('.step').forEach(function(el){ el.classList.remove('active'); });
+    document.querySelector('.step[data-step="' + currentStepId + '"]').classList.add('active');
+
+    document.getElementById('progressFill').style.width = ((idx + 1) / vis.length * 100) + '%';
+    document.getElementById('progressLabel').textContent = 'Paso ' + (idx + 1) + ' de ' + vis.length;
+    document.getElementById('btnBack').classList.toggle('hidden', idx === 0);
+
+    const btnNext = document.getElementById('btnNext');
+    btnNext.disabled = false;
+    btnNext.textContent = idx === vis.length - 1 ? 'Enviar visita →' : 'Siguiente →';
+
+    if (currentStepId === 'camgroups') ensureAtLeastOneGrupo();
+    if (currentStepId === 'resumen') renderResumen();
+
+    document.getElementById('steps').scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
+  function goNext(){
+    if (!validateStep(currentStepId)) return;
+    const vis = visibleSteps();
+    const idx = vis.findIndex(function(s){ return s.id === currentStepId; });
+    if (idx === vis.length - 1) { submitVisita(); return; }
+    currentStepId = vis[idx + 1].id;
+    render();
+  }
+  function goBack(){
+    const vis = visibleSteps();
+    const idx = vis.findIndex(function(s){ return s.id === currentStepId; });
+    if (idx <= 0) return;
+    currentStepId = vis[idx - 1].id;
+    render();
+  }
+
+  document.getElementById('btnNext').addEventListener('click', goNext);
+  document.getElementById('btnBack').addEventListener('click', goBack);
+
+  // fecha de visita = hoy por defecto
+  (function setFechaHoy(){
+    const f = document.getElementById('fecha_visita');
+    if (f && !f.value) {
+      const hoy = new Date();
+      const off = hoy.getTimezoneOffset();
+      f.value = new Date(hoy.getTime() - off * 60000).toISOString().slice(0, 10);
+    }
+  })();
+
+  render();
+})();
+</script>
+</body>
+</html>
