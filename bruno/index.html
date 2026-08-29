@@ -12,10 +12,12 @@
 <meta name="apple-mobile-web-app-title" content="Onix Presupuestos">
 <script>
   // Destino real: app de aprobación de Bruno (servida por Apps Script).
-  var DEST = "https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1";
+  // authuser=0 evita el error "No se pudo abrir el archivo" de Google cuando
+  // hay varias cuentas logueadas (fuerza a usar la primera y no mostrar el selector).
+  var DEST = "https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1&authuser=0";
   try { location.replace(DEST); } catch (e) { location.href = DEST; }
 </script>
-<meta http-equiv="refresh" content="1; url=https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&amp;key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1">
+<meta http-equiv="refresh" content="2; url=https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&amp;key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1&amp;authuser=0">
 <style>
   :root{
     --navy:#010326;
@@ -82,8 +84,8 @@
     <div class="spinner" aria-hidden="true"></div>
     <h1>Abriendo la app…</h1>
     <p>Si no se abre sola en unos segundos, tocá el botón:</p>
-    <a class="btn" href="https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&amp;key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1" rel="nofollow">Ir a la app de presupuestos</a>
-    <div class="hint">Si abrís esto desde WhatsApp y queda en blanco, usá el menú ⋮ → "Abrir en el navegador" (Chrome o Safari).</div>
+    <a class="btn" href="https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&amp;key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1&amp;authuser=0" rel="nofollow">Ir a la app de presupuestos</a>
+    <div class="hint">Si dice "No se pudo abrir el archivo", abrí este link en una pestaña privada de Safari, o probá con otra de tus cuentas de Google.</div>
   </div>
 </body>
 </html>
