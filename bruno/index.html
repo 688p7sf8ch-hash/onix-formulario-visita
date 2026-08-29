@@ -2,22 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>App de Presupuestos — Onix System</title>
-<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<title>Aprobaci&oacute;n de presupuestos &mdash; Onix System</title>
 <meta name="theme-color" content="#010326">
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="../favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="../favicon-16.png" sizes="16x16" type="image/png">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Onix Presupuestos">
-<script>
-  // Destino real: app de aprobación de Bruno (servida por Apps Script).
-  // authuser=0 evita el error "No se pudo abrir el archivo" de Google cuando
-  // hay varias cuentas logueadas (fuerza a usar la primera y no mostrar el selector).
-  var DEST = "https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1&authuser=0";
-  try { location.replace(DEST); } catch (e) { location.href = DEST; }
-</script>
-<meta http-equiv="refresh" content="2; url=https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&amp;key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1&amp;authuser=0">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   :root{
     --navy:#010326;
@@ -28,64 +22,1724 @@
     --border:#e2e5e2;
     --text:#171a1f;
     --muted:#6b7178;
+    --field-bg:#fafbfa;
+    --danger:#c0392b;
+    --danger-bg:#fdecea;
+    --ok-bg:#e6f5ee;
+    --ok:#0e7a4f;
     --radius:16px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    /* ---- Elevacion / "reborde de luz" (rediseno 2026-08-27, ver CLAUDE.md) ----
+       Antes las tarjetas usaban solo border:1px solid var(--border), plano.
+       Ahora: sombra suave de elevacion + un aro claro interior de 1px que
+       simula un filo iluminado en el borde superior de cada tarjeta. */
+    --shadow-card: 0 1px 2px rgba(1,3,38,.05), 0 16px 34px -18px rgba(1,3,38,.32);
+    --shadow-card-sm: 0 1px 1px rgba(1,3,38,.04), 0 8px 20px -12px rgba(1,3,38,.24);
+    --shadow-btn: 0 10px 22px -8px rgba(1,3,38,.35);
+    --shadow-topbar: 0 8px 22px -10px rgba(1,3,38,.55);
+    --ring-light: 0 0 0 1px rgba(255,255,255,.85) inset, 0 1px 0 rgba(255,255,255,.9) inset;
   }
   *{box-sizing:border-box;}
-  html,body{height:100%;margin:0;}
+  html,body{height:100%;}
   body{
+    margin:0;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);
     color:var(--text);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
     -webkit-tap-highlight-color:transparent;
+    overscroll-behavior-y:none;
   }
-  .card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    max-width:420px;
-    width:100%;
-    padding:32px 24px;
-    text-align:center;
-    box-shadow:0 1px 3px rgba(1,3,38,.06), 0 8px 28px rgba(1,3,38,.08);
+  /* En desktop, un fondo mas oscuro detras de la tarjeta flotante hace que
+     la sombra/reborde de luz se note (si el fondo es igual al de la tarjeta,
+     la sombra pierde contraste). */
+  @media (min-width:640px){
+    body{background:linear-gradient(160deg,#e7eae8,#dde1e6);}
   }
-  .logo{width:56px;height:56px;border-radius:14px;margin:0 auto 18px;display:block;}
-  h1{font-size:1.15rem;margin:0 0 6px;color:var(--navy);}
-  p{font-size:.95rem;color:var(--muted);margin:0 0 20px;line-height:1.5;}
-  .btn{
-    display:inline-block;
-    background:var(--green);
-    color:#fff;
-    text-decoration:none;
-    font-weight:600;
-    font-size:1rem;
-    padding:14px 22px;
-    border-radius:12px;
-    width:100%;
+  .app{max-width:640px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);}
+
+  /* En desktop/tablet, la app entera flota como una tarjeta de celular en
+     vez de quedar pegada borde a borde de la ventana (antes solo el wizard
+     de "Nueva visita" tenia este tratamiento via #nvz; ahora aplica siempre,
+     tabs/paneles incluidos). */
+  @media (min-width:640px){
+    .app{
+      margin-top:24px;margin-bottom:24px;
+      min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);
+      border-radius:26px;overflow:hidden;
+      box-shadow:var(--ring-light), 0 34px 80px -28px rgba(1,3,38,.45);
+    }
+    .topbar{padding-top:16px;}
   }
-  .spinner{
-    width:26px;height:26px;
-    border:3px solid var(--border);
-    border-top-color:var(--green);
-    border-radius:50%;
-    margin:0 auto 18px;
-    animation:spin .8s linear infinite;
+
+  .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:calc(14px + var(--safe-top)) 18px 14px;box-shadow:var(--shadow-topbar);}
+  .topbar h1{margin:0;font-size:17px;font-weight:800;letter-spacing:.2px;}
+  .topbar p{margin:2px 0 0;font-size:12.5px;color:#aeb3d6;}
+
+  .tabs{position:sticky;top:calc(58px + var(--safe-top));z-index:19;display:flex;background:#fff;box-shadow:0 6px 16px -10px rgba(1,3,38,.3);overflow-x:auto;}
+  .tab{flex:1;min-width:96px;text-align:center;padding:12px 8px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .15s ease;}
+  .tab.active{color:var(--orange);border-bottom-color:var(--orange);text-shadow:0 0 14px rgba(242,81,22,.35);}
+  .tab .n{display:inline-block;background:var(--border);color:var(--text);border-radius:999px;padding:0 6px;font-size:11px;margin-left:4px;}
+  .tab.active .n{background:var(--orange);color:#fff;box-shadow:0 0 0 3px rgba(242,81,22,.18);}
+
+  .panel{flex:1;padding:16px 16px calc(24px + var(--safe-bottom));display:none;}
+  .panel.active{display:block;}
+
+  .empty{color:var(--muted);text-align:center;padding:40px 16px;font-size:14px;}
+
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--ring-light), var(--shadow-card);}
+  .card .cliente{font-weight:800;font-size:15px;margin:0 0 2px;}
+  .card .fecha{font-size:12px;color:var(--muted);margin:0 0 10px;}
+  .card .subtitulo{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin:0 0 8px;}
+  .opcion{background:var(--field-bg);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .opcion .nombre{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;margin:0 0 4px;}
+  .opcion .cuerpo{font-size:13.5px;line-height:1.5;margin:0 0 6px;white-space:pre-wrap;}
+  .opcion .precio{font-size:14.5px;font-weight:800;color:var(--navy);margin:0;}
+
+  .comentarios{margin-top:10px;}
+  .comentario{background:#fff;border-left:3px solid var(--orange);padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:6px;box-shadow:var(--shadow-card-sm);}
+  .comentario .autor{font-weight:700;font-size:11.5px;color:var(--muted);}
+
+  .row{display:flex;gap:8px;margin-top:12px;}
+  .btn{flex:1;border:none;border-radius:12px;padding:12px 10px;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-btn);transition:transform .12s ease;}
+  .btn:active{transform:scale(.97);}
+  .btn-aprobar{background:var(--ok);color:#fff;box-shadow:0 10px 22px -8px rgba(14,122,79,.5);}
+  .btn-rechazar{background:var(--danger-bg);color:var(--danger);box-shadow:none;}
+  .btn-enviado{background:var(--orange);color:#fff;box-shadow:0 10px 22px -8px rgba(242,81,22,.5);}
+  .btn:disabled{background:#a9adb3;color:#fff;cursor:not-allowed;box-shadow:none;}
+
+  .estado-chip{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;margin-bottom:8px;}
+  .estado-generando{background:#fff3cd;color:#8a6300;}
+  .estado-listo{background:var(--ok-bg);color:var(--ok);}
+
+  textarea.comentario-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 10px;font-size:13.5px;font-family:inherit;resize:vertical;min-height:52px;margin-top:8px;}
+
+  a.btn-descargar{display:block;text-align:center;background:var(--navy);color:#fff;text-decoration:none;border-radius:12px;padding:12px 10px;font-size:13.5px;font-weight:800;margin-top:10px;box-shadow:0 10px 22px -8px rgba(1,3,38,.45);transition:transform .12s ease;}
+  a.btn-descargar:active{transform:scale(.97);}
+
+  .visita-row{display:flex;justify-content:space-between;align-items:baseline;padding:12px 14px;margin-bottom:10px;border-bottom:none;border-radius:12px;font-size:13.5px;background:var(--card);box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  .visita-row .c{font-weight:700;}
+  .visita-row .f{color:var(--muted);font-size:12px;}
+
+  /* ---- Items con link, dentro de cada opcion (para que Bruno/Antonella puedan
+     verificar cada producto contra el proveedor antes de aprobar) ---- */
+  .items-list{margin:8px 0 6px;}
+  .items-list .item-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:12.3px;line-height:1.4;}
+  .items-list .item-row:last-child{border-bottom:none;}
+  .items-list .item-nombre{flex:1;min-width:0;}
+  .items-list .item-nombre a{color:var(--navy);text-decoration:underline;word-break:break-word;}
+  .items-list .item-nombre .sinlink{color:var(--muted);}
+  .items-list .item-prov{display:block;font-size:10.8px;color:var(--muted);margin-top:1px;}
+  .items-list .item-precio{white-space:nowrap;font-weight:700;color:var(--text);font-size:12.3px;}
+
+  .btn-nueva-visita{
+    width:100%;background:var(--orange);color:#fff;border:none;
+    padding:13px;font-size:14px;font-weight:800;border-radius:12px;cursor:pointer;margin-bottom:14px;
+    box-shadow:0 10px 22px -8px rgba(242,81,22,.55);transition:transform .12s ease;
   }
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .hint{margin-top:16px;font-size:.8rem;color:var(--muted);}
+  .btn-nueva-visita:active{transform:scale(.97);}
+
+  /* ============================================================
+     WIZARD DE VISITA (integrado 2026-08-26, misma marcacion que
+     onix-formulario-visita/index.html, escopeado bajo #nvz para no
+     pisar los estilos de arriba - ver bruno-app.html PASO de "Visitas"
+     en CLAUDE.md). Toda regla de aca abajo esta prefijada con #nvz.
+     ============================================================ */
+  #nvz, #nvz *{box-sizing:border-box;}
+  #nvz{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;flex-direction:column;background:var(--bg);}
+
+  #nvz .topbar{position:sticky;top:0;z-index:20;background:var(--navy);padding-top:calc(10px + var(--safe-top));padding-bottom:12px;}
+  #nvz .topbar-row{display:flex;align-items:center;gap:10px;padding:0 14px;}
+  #nvz .icon-btn{appearance:none;border:none;background:rgba(255,255,255,0.08);color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  #nvz .icon-btn:active{background:rgba(255,255,255,0.18);}
+  #nvz .icon-btn.hidden{visibility:hidden;}
+  #nvz .progress-wrap{flex:1;min-width:0;}
+  #nvz .progress-track{background:rgba(255,255,255,0.14);height:6px;border-radius:6px;overflow:hidden;}
+  #nvz .progress-fill{height:100%;width:8%;background:linear-gradient(90deg,var(--green),var(--orange));border-radius:6px;transition:width .25s ease;}
+  #nvz .progress-label{color:#aab1c8;font-size:11.5px;font-weight:600;letter-spacing:.3px;margin-top:5px;}
+
+  #nvz .steps{flex:1;position:relative;}
+  #nvz .step{display:none;padding:22px 18px 28px;animation:wizfadein .22s ease;}
+  #nvz .step.active{display:block;}
+  @keyframes wizfadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  #nvz .step-eyebrow{display:flex;align-items:center;gap:8px;color:var(--green);font-weight:700;font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+  #nvz .step-eyebrow svg{width:16px;height:16px;stroke:var(--green);}
+  #nvz .step-title{font-size:22px;font-weight:800;margin:0 0 4px;letter-spacing:-.2px;}
+  #nvz .step-sub{color:var(--muted);font-size:13.5px;line-height:1.5;margin:0 0 20px;}
+
+  #nvz .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  #nvz .brand-row img{width:38px;height:38px;border-radius:9px;}
+  #nvz .brand-row .brand-name{font-weight:800;font-size:14px;letter-spacing:1.5px;color:var(--navy);}
+  #nvz .brand-row .brand-sub{font-size:11.5px;color:var(--muted);}
+
+  #nvz .field{margin-bottom:16px;}
+  #nvz .field label{display:block;font-weight:600;font-size:13px;color:#3d4148;margin-bottom:6px;}
+  #nvz .field .hint{display:block;font-size:11.5px;color:var(--muted);margin-top:5px;}
+  #nvz input, #nvz select, #nvz textarea{
+    width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border);
+    font-size:16px;font-family:inherit;color:var(--text);background:var(--field-bg);
+  }
+  #nvz input:focus, #nvz select:focus, #nvz textarea:focus{outline:none;border-color:var(--green);background:#fff;}
+  #nvz textarea{resize:vertical;min-height:110px;}
+  #nvz select{appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;background-size:18px;
+    padding-right:38px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;
+  }
+  #nvz .field.invalid input, #nvz .field.invalid select{border-color:var(--danger);background:var(--danger-bg);}
+
+  #nvz .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #nvz .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+  #nvz .system-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+  #nvz .system-opt{position:relative;}
+  #nvz .system-opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;top:0;left:0;cursor:pointer;}
+  #nvz .system-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.9);background:#fff;min-height:92px;justify-content:center;box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  #nvz .system-card svg{width:24px;height:24px;stroke:var(--navy);flex-shrink:0;}
+  #nvz .system-card .system-name{font-weight:700;font-size:13.5px;line-height:1.25;}
+  #nvz .system-opt input:checked + .system-card{border-color:var(--green);background:#f2faf6;box-shadow:0 0 0 1.5px var(--green) inset, 0 10px 22px -12px rgba(6,102,78,.4);}
+  #nvz .system-opt input:checked + .system-card svg{stroke:var(--green);}
+  #nvz .system-opt input:focus-visible + .system-card{outline:2px solid var(--orange);outline-offset:2px;}
+
+  #nvz .check-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+  #nvz .check-pill{position:relative;}
+  #nvz .check-pill input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  #nvz .check-pill span{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;border:1.5px solid var(--border);background:#fff;font-size:13.3px;font-weight:600;color:#3d4148;box-shadow:var(--shadow-card-sm);}
+  #nvz .check-pill input:checked + span{border-color:var(--orange);background:#fff3ee;color:#b8380f;box-shadow:0 6px 16px -8px rgba(242,81,22,.4);}
+
+  #nvz .panel-card{background:#f7f9f7;border:1px solid #06664E26;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  #nvz .panel-card-title{font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-bottom:12px;}
+
+  #nvz .group-card{background:#fff;border:1px solid rgba(255,255,255,.9);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  #nvz .group-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  #nvz .group-card-head strong{color:var(--green);font-size:13px;}
+  #nvz .btn-remove{background:none;border:none;color:var(--danger);font-size:12.5px;font-weight:700;padding:6px 4px;cursor:pointer;}
+  #nvz .btn-add-dashed{width:100%;background:#fff;border:1.5px dashed var(--green);color:var(--green);font-weight:700;font-size:13.5px;padding:13px;border-radius:12px;cursor:pointer;}
+  #nvz .helper-box{background:#eef6f2;border:1px solid #06664E26;border-radius:12px;padding:12px 14px;font-size:12.6px;color:#33413c;line-height:1.55;margin-bottom:14px;}
+  #nvz .helper-box b{color:var(--green);}
+
+  #nvz .summary-block{background:#fff;border:1px solid rgba(255,255,255,.9);border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  #nvz .summary-block h4{margin:0 0 8px;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--green);}
+  #nvz .summary-block p{margin:0 0 4px;font-size:14px;line-height:1.5;}
+  #nvz .summary-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  #nvz .summary-chip{background:#f2faf6;border:1px solid #06664E33;color:#0b4a37;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;}
+  #nvz .toggle-detail{background:none;border:none;color:var(--orange);font-weight:700;font-size:13px;padding:6px 0;cursor:pointer;margin-top:2px;}
+  #nvz .detail-pre{display:none;background:var(--navy);color:#dbe2f5;border-radius:12px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;margin-top:10px;max-height:340px;overflow:auto;}
+  #nvz .detail-pre.show{display:block;}
+
+  #nvz .status-banner{display:none;border-radius:12px;padding:12px 14px;font-size:13.5px;font-weight:600;margin-top:14px;}
+  #nvz .status-banner.show{display:block;}
+  #nvz .status-banner.sending{background:#fff6e0;color:#8a6100;}
+  #nvz .status-banner.ok{background:var(--ok-bg);color:var(--ok);}
+  #nvz .status-banner.error{background:var(--danger-bg);color:var(--danger);}
+  #nvz .btn-copy-fallback{display:none;width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--text);font-weight:700;font-size:13.5px;cursor:pointer;}
+  #nvz .btn-copy-fallback.show{display:block;}
+
+  #nvz .bottombar{position:sticky;bottom:0;z-index:20;background:linear-gradient(180deg,rgba(242,244,243,0),var(--bg) 24%);padding:14px 18px calc(16px + var(--safe-bottom));}
+  #nvz .btn-primary{width:100%;background:var(--orange);color:#fff;border:none;padding:16px;font-size:16px;font-weight:800;letter-spacing:.3px;border-radius:14px;cursor:pointer;box-shadow:0 8px 18px -6px rgba(242,81,22,.55);}
+  #nvz .btn-primary:active{background:#d4420f;}
+  #nvz .btn-primary:disabled{background:#a9adb3;box-shadow:none;cursor:not-allowed;}
+
+  #nvz .done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 26px;}
+  #nvz .done-check{width:84px;height:84px;border-radius:50%;background:var(--ok-bg);display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
+  #nvz .done-check svg{width:44px;height:44px;stroke:var(--ok);}
+  #nvz .done-wrap h2{margin:0 0 8px;font-size:21px;}
+  #nvz .done-wrap p{margin:0 0 26px;color:var(--muted);font-size:14px;line-height:1.6;max-width:320px;}
+  #nvz .btn-secondary{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:14px 22px;border-radius:14px;font-weight:700;font-size:14px;cursor:pointer;}
+
+  .brand-logo-topbar{width:34px;height:34px;border-radius:8px;margin-right:10px;flex-shrink:0;display:none;}
+  .brand-logo-topbar[src]{display:inline-block;}
+  .topbar-brand-row{display:flex;align-items:center;}
+
+  .citas-section{margin-bottom:18px;}
+  .citas-section h3{font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 10px;}
+  .cita-row{background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  .cita-row .cita-nombre{font-weight:800;font-size:14px;margin:0 0 2px;}
+  .cita-row .cita-direccion{font-size:12.5px;color:var(--muted);margin:0 0 2px;}
+  .cita-row .cita-direccion.sin-direccion{font-style:italic;}
+  .cita-row .cita-fecha{font-size:12px;color:var(--muted);margin:0 0 10px;}
+  .btn-agregar-datos{width:100%;background:var(--green);color:#fff;border:none;padding:11px;font-size:13px;font-weight:800;border-radius:10px;cursor:pointer;box-shadow:0 10px 20px -8px rgba(6,102,78,.5);transition:transform .12s ease;}
+  .btn-agregar-datos:active{transform:scale(.97);}
 </style>
 </head>
 <body>
-  <div class="card">
-    <img class="logo" src="../icon-192.png" alt="Onix System">
-    <div class="spinner" aria-hidden="true"></div>
-    <h1>Abriendo la app…</h1>
-    <p>Si no se abre sola en unos segundos, tocá el botón:</p>
-    <a class="btn" href="https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec?app=bruno&amp;key=1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1&amp;authuser=0" rel="nofollow">Ir a la app de presupuestos</a>
-    <div class="hint">Si dice "No se pudo abrir el archivo", abrí este link en una pestaña privada de Safari, o probá con otra de tus cuentas de Google.</div>
+<div class="app">
+  <div id="brunoChrome">
+    <div class="topbar">
+      <div class="topbar-brand-row">
+        <img class="brand-logo-topbar" id="logoTopbar" alt="Onix System">
+        <h1>Onix System</h1>
+      </div>
+      <p>Aprobaci&oacute;n de presupuestos</p>
+    </div>
+    <div class="tabs">
+      <div class="tab" data-tab="visitas">Visitas</div>
+      <div class="tab" data-tab="pendiente_aprobacion">Pendiente<span class="n" id="n-pendiente_aprobacion">0</span></div>
+      <div class="tab" data-tab="aprobado">Aprobado<span class="n" id="n-aprobado">0</span></div>
+      <div class="tab" data-tab="enviado">Enviado</div>
+    </div>
   </div>
+
+  <div class="panel" data-panel="visitas">
+    <button type="button" class="btn-nueva-visita" id="btnNuevaVisitaShow">+ Nueva visita</button>
+    <div class="citas-section">
+      <h3>Proximas visitas agendadas</h3>
+      <div id="citasCalendarioWrap"><div class="empty">Cargando&hellip;</div></div>
+    </div>
+    <div id="visitasListWrap"><div class="empty">Cargando&hellip;</div></div>
+  </div>
+  <div class="panel" data-panel="pendiente_aprobacion"><div class="empty">Cargando&hellip;</div></div>
+  <div class="panel" data-panel="aprobado"><div class="empty">Cargando&hellip;</div></div>
+  <div class="panel" data-panel="enviado"><div class="empty">Cargando&hellip;</div></div>
+
+  <!-- ============================================================
+       WIZARD DE VISITA (integrado 2026-08-26) - mismo markup que
+       onix-formulario-visita/index.html, escopeado bajo #nvz (ver
+       CSS arriba). Oculto por default; se muestra con "+ Nueva
+       visita" y se oculta al terminar/cancelar (ver mostrarWizardVisita/
+       ocultarWizardVisita en el script principal, mas abajo). El
+       envio es POST { tipo:"visita_nueva", key:APP_KEY, ... } al
+       backend, no-cors fire-and-forget (ver submitVisita). El
+       formulario standalone de GitHub Pages (onix-formulario-visita)
+       sigue existiendo igual para quien no tenga la clave de Bruno. -->
+
+  <noscript><p style="padding:20px;font-family:sans-serif">Esta app necesita JavaScript.</p></noscript>
+  <div id="nvz" style="display:none">
+
+    <div class="topbar" id="nvzTopbar">
+      <div class="topbar-row">
+        <button class="icon-btn" id="nvzBtnBack" aria-label="Atr&aacute;s">&lsaquo;</button>
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="nvzProgressFill"></div></div>
+          <div class="progress-label" id="nvzProgressLabel">Paso 1 de 9</div>
+        </div>
+      </div>
+    </div>
+
+    <main class="steps" id="nvzSteps">
+
+      <!-- CLIENTE -->
+      <section class="step" data-step="cliente">
+        <div class="brand-row">
+          <img id="logoWizard" alt="Onix System">
+          <div>
+            <div class="brand-name">ONIX SYSTEM</div>
+            <div class="brand-sub">Nueva visita t&eacute;cnica</div>
+          </div>
+        </div>
+        <div class="step-title">&iquest;A qui&eacute;n visitaste?</div>
+        <p class="step-sub">Completa los datos del cliente. El resto lo vas a poder cargar en los pr&oacute;ximos pasos.</p>
+
+        <div class="field" id="nvz_f_cliente_nombre">
+          <label>Nombre del cliente</label>
+          <input type="text" id="nvz_cliente_nombre" placeholder="Ej: Juan Garc&iacute;a" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Direcci&oacute;n</label>
+          <input type="text" id="nvz_cliente_direccion" placeholder="Ej: Av. 18 de Julio 1234, Montevideo" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Fecha de visita</label>
+          <input type="date" id="nvz_fecha_visita">
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Moneda del presupuesto</label>
+            <select id="nvz_moneda">
+              <option value="USD">USD (d&oacute;lares)</option>
+              <option value="UYU">UYU (pesos)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Presupuesto del cliente</label>
+            <input type="text" id="nvz_presupuesto_cliente" placeholder="Ej: USD 800">
+          </div>
+        </div>
+      </section>
+
+      <!-- SISTEMAS -->
+      <section class="step" data-step="sistemas">
+        <div class="step-eyebrow">2 &middot; Sistemas</div>
+        <div class="step-title">&iquest;Qu&eacute; sistemas instalamos?</div>
+        <p class="step-sub">Pod&eacute;s elegir m&aacute;s de uno &mdash; se abre un paso por cada uno.</p>
+
+        <div class="system-grid">
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_wifi">
+            <label for="nvz_tipo_wifi" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              <span class="system-name">C&aacute;maras WiFi</span>
+            </label>
+          </div>
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_ip">
+            <label for="nvz_tipo_ip" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+              <span class="system-name">C&aacute;maras IP (NVR)</span>
+            </label>
+          </div>
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_analog">
+            <label for="nvz_tipo_analog" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+              <span class="system-name">Anal&oacute;gico (DVR)</span>
+            </label>
+          </div>
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_video">
+            <label for="nvz_tipo_video" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <span class="system-name">Videoporter&iacute;a</span>
+            </label>
+          </div>
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_alarma">
+            <label for="nvz_tipo_alarma" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span class="system-name">Alarma</span>
+            </label>
+          </div>
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_portero2h">
+            <label for="nvz_tipo_portero2h" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span class="system-name">Portero (2 hilos)</span>
+            </label>
+          </div>
+          <div class="system-opt">
+            <input type="checkbox" id="nvz_tipo_control_acceso">
+            <label for="nvz_tipo_control_acceso" class="system-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5 19 11"/><path d="M18 4l2.5 2.5"/></svg>
+              <span class="system-name">Control de acceso</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- WIFI -->
+      <section class="step" data-step="wifi">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          C&aacute;maras WiFi
+        </div>
+        <div class="step-title">Sistema WiFi</div>
+        <p class="step-sub">C&aacute;maras standalone que graban en su propia tarjeta de memoria.</p>
+
+        <div class="field" id="nvz_f_wifi_camaras"><label>Cantidad de c&aacute;maras</label><input type="number" id="nvz_wifi_camaras" min="1" inputmode="numeric" placeholder="Ej: 3"></div>
+        <div class="grid2">
+          <div class="field"><label>Exterior (IP67)</label><input type="number" id="nvz_wifi_camaras_ext" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Interior</label><input type="number" id="nvz_wifi_camaras_int" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="field">
+          <label>Tarjeta de memoria por c&aacute;mara</label>
+          <select id="nvz_wifi_sd">
+            <option value="">A definir seg&uacute;n precio</option>
+            <option value="32GB">32 GB</option>
+            <option value="64GB">64 GB</option>
+            <option value="128GB">128 GB</option>
+            <option value="256GB">256 GB</option>
+          </select>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>&iquest;Repetidor WiFi?</label>
+            <select id="nvz_wifi_repetidor"><option value="si">S&iacute;</option><option value="no">No</option></select>
+          </div>
+          <div class="field">
+            <label>&iquest;UPS?</label>
+            <select id="nvz_wifi_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Metros de cable de corriente</label>
+          <input type="number" id="nvz_wifi_cable" min="0" inputmode="numeric" placeholder="Ej: 15">
+          <span class="hint">Consultar en visita &mdash; var&iacute;a por tomacorriente</span>
+        </div>
+        <div class="field">
+          <label>Marca / modelo preferido (opcional)</label>
+          <select id="nvz_wifi_marca">
+            <option value="">Sin preferencia</option>
+            <option value="EZVIZ">EZVIZ</option>
+            <option value="Hikvision">Hikvision</option>
+            <option value="HiLook">HiLook</option>
+            <option value="Dahua">Dahua</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- IP -->
+      <section class="step" data-step="ip">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          C&aacute;maras IP
+        </div>
+        <div class="step-title">Sistema IP (NVR)</div>
+        <p class="step-sub">C&aacute;maras en red conectadas a un grabador NVR.</p>
+
+        <div class="field" id="nvz_f_ip_camaras"><label>Cantidad de c&aacute;maras</label><input type="number" id="nvz_ip_camaras" min="1" inputmode="numeric" placeholder="Ej: 6"></div>
+        <div class="grid2">
+          <div class="field"><label>Exterior (IP67)</label><input type="number" id="nvz_ip_camaras_ext" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Interior</label><input type="number" id="nvz_ip_camaras_int" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>NVR (canales)</label>
+            <select id="nvz_ip_nvr">
+              <option value="">A definir</option>
+              <option value="4">4 canales</option>
+              <option value="8">8 canales</option>
+              <option value="16">16 canales</option>
+              <option value="32">32 canales</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Disco duro</label>
+            <select id="nvz_ip_disco">
+              <option value="">A definir</option>
+              <option value="1TB">1 TB</option>
+              <option value="2TB">2 TB</option>
+              <option value="4TB">4 TB</option>
+              <option value="6TB">6 TB</option>
+              <option value="8TB">8 TB</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Switch PoE (puertos)</label>
+            <select id="nvz_ip_switch">
+              <option value="">A definir</option>
+              <option value="Sin switch">Sin switch</option>
+              <option value="4p">4 puertos</option>
+              <option value="8p">8 puertos</option>
+              <option value="16p">16 puertos</option>
+              <option value="24p">24 puertos</option>
+            </select>
+          </div>
+          <div class="field"><label>Metros de cable UTP</label><input type="number" id="nvz_ip_cable" min="0" inputmode="numeric" placeholder="Ej: 80"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Marca preferida</label>
+            <select id="nvz_ip_marca">
+              <option value="">Sin preferencia</option>
+              <option value="Hikvision">Hikvision</option>
+              <option value="HiLook">HiLook</option>
+              <option value="Dahua">Dahua</option>
+              <option value="EZVIZ">EZVIZ</option>
+              <option value="Intelbras">Intelbras</option>
+              <option value="Tiandy">Tiandy</option>
+              <option value="Otra">Otra (aclarar en notas)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>&iquest;UPS?</label>
+            <select id="nvz_ip_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALOG -->
+      <section class="step" data-step="analog">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          C&aacute;maras Anal&oacute;gicas
+        </div>
+        <div class="step-title">Sistema Anal&oacute;gico (DVR)</div>
+
+        <div class="field" id="nvz_f_analog_camaras"><label>Cantidad de c&aacute;maras</label><input type="number" id="nvz_analog_camaras" min="1" inputmode="numeric" placeholder="Ej: 4"></div>
+        <div class="grid2">
+          <div class="field"><label>Exterior (IP67)</label><input type="number" id="nvz_analog_camaras_ext" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Interior</label><input type="number" id="nvz_analog_camaras_int" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>DVR (canales)</label>
+            <select id="nvz_analog_dvr">
+              <option value="">A definir</option>
+              <option value="4">4 canales</option>
+              <option value="8">8 canales</option>
+              <option value="16">16 canales</option>
+              <option value="32">32 canales</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Disco duro</label>
+            <select id="nvz_analog_disco">
+              <option value="">A definir</option>
+              <option value="1TB">1 TB</option>
+              <option value="2TB">2 TB</option>
+              <option value="4TB">4 TB</option>
+              <option value="6TB">6 TB</option>
+              <option value="8TB">8 TB</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Metros de cable</label><input type="number" id="nvz_analog_cable" min="0" inputmode="numeric" placeholder="Ej: 60"></div>
+          <div class="field"><label>Metros de ducto</label><input type="number" id="nvz_analog_ducto" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Marca preferida</label>
+            <select id="nvz_analog_marca">
+              <option value="">Sin preferencia</option>
+              <option value="Hikvision">Hikvision</option>
+              <option value="HiLook">HiLook</option>
+              <option value="Dahua">Dahua</option>
+              <option value="Intelbras">Intelbras</option>
+              <option value="Vanguard">Vanguard</option>
+              <option value="Tiandy">Tiandy</option>
+              <option value="Otra">Otra (aclarar en notas)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>&iquest;UPS?</label>
+            <select id="nvz_analog_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+          </div>
+        </div>
+      </section>
+
+      <!-- GRUPOS DE CAMARAS -->
+      <section class="step" data-step="camgroups">
+        <div class="step-eyebrow">Requisitos de c&aacute;maras</div>
+        <div class="step-title">Agrup&aacute; las c&aacute;maras por lo que necesitan</div>
+        <div class="helper-box">
+          Ej: <b>2 con reconocimiento facial</b> + <b>4 comunes</b>. Se cotiza cada grupo con la c&aacute;mara m&aacute;s
+          barata que cumpla, as&iacute; lo caro (facial, patentes, 4K...) se paga <b>solo donde hace falta</b>.
+          Tild&aacute; &uacute;nicamente lo que ese grupo necesita.
+        </div>
+        <div id="nvz_grupos_container"></div>
+        <button type="button" class="btn-add-dashed" id="nvzBtnAddGrupo">+ Agregar grupo de c&aacute;maras</button>
+      </section>
+
+      <!-- VIDEOPORTERIA -->
+      <section class="step" data-step="video">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          Videoporter&iacute;a
+        </div>
+        <div class="step-title">Videoporter&iacute;a</div>
+
+        <div class="field" id="nvz_f_video_pantallas"><label>Pantallas interiores</label><input type="number" id="nvz_video_pantallas" min="1" inputmode="numeric" placeholder="Ej: 2"></div>
+        <div class="field">
+          <label>Tipo de cerradura</label>
+          <select id="nvz_video_cerradura">
+            <option value="">Seleccionar</option>
+            <option value="electroiman">Electroim&aacute;n</option>
+            <option value="cerrojo">Cerrojo el&eacute;ctrico</option>
+            <option value="ambos">Ambos</option>
+          </select>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Metros de cable</label><input type="number" id="nvz_video_cable" min="0" inputmode="numeric" placeholder="Ej: 30"></div>
+          <div class="field">
+            <label>&iquest;UPS?</label>
+            <select id="nvz_video_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Marca preferida (opcional)</label>
+          <select id="nvz_video_marca">
+            <option value="">Sin preferencia</option>
+            <option value="Hikvision">Hikvision</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Dahua">Dahua</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Observaciones espec&iacute;ficas</label>
+          <input type="text" id="nvz_video_obs" placeholder="Ej: edificio, casa, cantidad de pisos">
+        </div>
+      </section>
+
+      <!-- ALARMA -->
+      <section class="step" data-step="alarma">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Alarma
+        </div>
+        <div class="step-title">Sistema de Alarma</div>
+
+        <div class="field">
+          <label>Marca</label>
+          <select id="nvz_alarma_marca">
+            <option value="">Seleccionar</option>
+            <option value="Hikvision AX PRO">Hikvision AX PRO (inal&aacute;mbrica)</option>
+            <option value="Intelbras">Intelbras</option>
+          </select>
+        </div>
+        <div class="field" id="nvz_alarma_conexion_wrap" style="display:none">
+          <label>Tipo de conexi&oacute;n (Intelbras)</label>
+          <select id="nvz_alarma_conexion">
+            <option value="inalambrica">Inal&aacute;mbrica</option>
+            <option value="cableada">Cableada (UTP)</option>
+            <option value="mixta">Mixta</option>
+          </select>
+        </div>
+        <div class="field" id="nvz_alarma_cable_wrap" style="display:none">
+          <label>Metros de cable UTP</label>
+          <input type="number" id="nvz_alarma_cable_utp" min="0" inputmode="numeric" placeholder="Ej: 40">
+          <span class="hint">Cable UTP Cat 5e &mdash; USD 1/m (IVA incluido)</span>
+        </div>
+
+        <div class="grid3">
+          <div class="field"><label>Puerta/ventana</label><input type="number" id="nvz_alarma_sensor_puerta" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>PIR interior</label><input type="number" id="nvz_alarma_sensor_mov_int" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>PIR exterior</label><input type="number" id="nvz_alarma_sensor_mov_ext" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label>Sirenas</label><input type="number" id="nvz_alarma_sirena" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Teclados</label><input type="number" id="nvz_alarma_teclado" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Controles remotos</label><input type="number" id="nvz_alarma_control" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Central incluida</label>
+            <select id="nvz_alarma_central"><option value="si">S&iacute;</option><option value="no">No (ya tiene)</option></select>
+          </div>
+          <div class="field">
+            <label>Bater&iacute;a de respaldo</label>
+            <select id="nvz_alarma_bateria"><option value="si">S&iacute;</option><option value="no">No</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Observaciones de alarma</label>
+          <input type="text" id="nvz_alarma_obs" placeholder="Ej: ampliaci&oacute;n de sistema existente, zona espec&iacute;fica...">
+        </div>
+      </section>
+
+      <!-- PORTERO 2 HILOS -->
+      <section class="step" data-step="portero2h">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Portero
+        </div>
+        <div class="step-title">Portero (2 hilos, audio)</div>
+        <p class="step-sub">Portero convencional solo audio (sin pantalla/video) &mdash; t&iacute;pico de edificios de apartamentos.</p>
+
+        <div class="field" id="nvz_f_portero2h_aptos"><label>Cantidad de apartamentos/estaciones</label><input type="number" id="nvz_portero2h_aptos" min="1" inputmode="numeric" placeholder="Ej: 15"></div>
+        <div class="field">
+          <label>Tipo de cerradura</label>
+          <select id="nvz_portero2h_cerradura">
+            <option value="">Seleccionar</option>
+            <option value="electroiman">Electroim&aacute;n</option>
+            <option value="cerrojo">Cerrojo el&eacute;ctrico</option>
+            <option value="ambos">Ambos</option>
+          </select>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Metros de cable (2 hilos)</label><input type="number" id="nvz_portero2h_cable" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
+          <div class="field">
+            <label>&iquest;UPS?</label>
+            <select id="nvz_portero2h_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Marca preferida (opcional)</label>
+          <select id="nvz_portero2h_marca">
+            <option value="">Sin preferencia</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Observaciones espec&iacute;ficas</label>
+          <input type="text" id="nvz_portero2h_obs" placeholder="Ej: cantidad de pisos, frente a empotrar/sobreponer">
+        </div>
+      </section>
+
+      <!-- CONTROL DE ACCESO -->
+      <section class="step" data-step="ctrlacceso">
+        <div class="step-eyebrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5 19 11"/></svg>
+          Control de acceso
+        </div>
+        <div class="step-title">Control de Acceso</div>
+        <p class="step-sub">Puerta peatonal con cerradura el&eacute;ctrica controlada por credencial.</p>
+
+        <div class="field" id="nvz_f_ctrlacceso_puertas"><label>Cantidad de puertas/puntos</label><input type="number" id="nvz_ctrlacceso_puertas" min="1" inputmode="numeric" placeholder="Ej: 2"></div>
+        <div class="grid2">
+          <div class="field">
+            <label>Sentido</label>
+            <select id="nvz_ctrlacceso_sentido">
+              <option value="solo_entrada">Solo entrada (1 lectora)</option>
+              <option value="entrada_salida">Entrada y salida (2 lectoras)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de cerradura</label>
+            <select id="nvz_ctrlacceso_cerradura">
+              <option value="">Seleccionar</option>
+              <option value="electroiman">Electroim&aacute;n</option>
+              <option value="cerrojo">Cerrojo el&eacute;ctrico</option>
+              <option value="ambos">Ambos</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tipo de credencial (puede ser m&aacute;s de una)</label>
+          <div class="check-grid">
+            <label class="check-pill"><input type="checkbox" id="nvz_ctrlacceso_rfid"><span>Tarjeta/tag RFID</span></label>
+            <label class="check-pill"><input type="checkbox" id="nvz_ctrlacceso_huella"><span>Huella dactilar</span></label>
+            <label class="check-pill"><input type="checkbox" id="nvz_ctrlacceso_facial"><span>Facial</span></label>
+            <label class="check-pill"><input type="checkbox" id="nvz_ctrlacceso_pin"><span>Clave/PIN o app</span></label>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Marca preferida (opcional)</label>
+            <select id="nvz_ctrlacceso_marca">
+              <option value="">Sin preferencia</option>
+              <option value="Hikvision">Hikvision</option>
+              <option value="ZKTeco">ZKTeco</option>
+              <option value="Intelbras">Intelbras</option>
+              <option value="Otra">Otra (aclarar en notas)</option>
+            </select>
+          </div>
+          <div class="field"><label>Metros de cable</label><input type="number" id="nvz_ctrlacceso_cable" min="0" inputmode="numeric" placeholder="Ej: 15"></div>
+        </div>
+        <div class="field">
+          <label>&iquest;UPS?</label>
+          <select id="nvz_ctrlacceso_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+        </div>
+        <div class="field">
+          <label>Observaciones espec&iacute;ficas</label>
+          <input type="text" id="nvz_ctrlacceso_obs" placeholder="Ej: integraci&oacute;n con n&oacute;mina de usuarios, molinete existente...">
+        </div>
+      </section>
+
+      <!-- DAISA -->
+      <section class="step" data-step="daisa">
+        <div class="step-eyebrow">Cableado</div>
+        <div class="step-title">Daisa y ducto (general)</div>
+        <p class="step-sub">Si ya cargaste metros de cable en la secci&oacute;n del sistema, dej&aacute; esto en 0. Es solo para lo adicional o compartido entre sistemas.</p>
+
+        <div class="grid2">
+          <div class="field"><label>Metros de ca&ntilde;o daisa</label><input type="number" id="nvz_daisa_metros" min="0" value="0" inputmode="numeric"><span class="hint">Se consigue en Fivisa</span></div>
+          <div class="field"><label>Metros de ducto</label><input type="number" id="nvz_ducto_metros" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="field">
+          <label>&iquest;Gabinete necesario?</label>
+          <select id="nvz_gabinete"><option value="no">No</option><option value="si">S&iacute; (Balanir)</option></select>
+        </div>
+        <div id="nvz_daisa_accesorios_row" style="display:none">
+          <div class="grid3">
+            <div class="field"><label>Codos</label><input type="number" id="nvz_daisa_codos" min="0" value="0" inputmode="numeric"></div>
+            <div class="field"><label>Grampas</label><input type="number" id="nvz_daisa_grampas" min="0" value="0" inputmode="numeric"></div>
+            <div class="field"><label>Uniones</label><input type="number" id="nvz_daisa_uniones" min="0" value="0" inputmode="numeric"></div>
+          </div>
+          <div class="field"><label>Corrugados</label><input type="number" id="nvz_daisa_corrugados" min="0" value="0" inputmode="numeric"></div>
+        </div>
+      </section>
+
+      <!-- LOGISTICA -->
+      <section class="step" data-step="logistica">
+        <div class="step-eyebrow">Mano de obra</div>
+        <div class="step-title">Horas y log&iacute;stica</div>
+
+        <div class="field" id="nvz_f_horas">
+          <label>Horas de trabajo estimadas</label>
+          <input type="number" id="nvz_horas" min="0.5" step="0.5" inputmode="decimal" placeholder="Ej: 4">
+          <span class="hint">USD 50/hora</span>
+        </div>
+        <div class="field">
+          <label>Kil&oacute;metros desde el taller</label>
+          <input type="number" id="nvz_km" min="0" inputmode="numeric" placeholder="Ej: 12">
+          <span class="hint">1 litro cada 15 km &mdash; se calcula con el precio ANCAP del d&iacute;a</span>
+        </div>
+        <div class="field">
+          <label>&iquest;Pasa las 4 horas de trabajo?</label>
+          <select id="nvz_comida">
+            <option value="auto">Detectar autom&aacute;ticamente</option>
+            <option value="si">S&iacute; (incluir $500 UYU comida)</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- NOTAS -->
+      <section class="step" data-step="notas">
+        <div class="step-eyebrow">&Uacute;ltimo paso</div>
+        <div class="step-title">Notas de la visita</div>
+        <p class="step-sub">Pon&eacute; ac&aacute; todo lo relevante en un solo lugar.</p>
+
+        <div class="field">
+          <textarea id="nvz_notas" placeholder="Lo que el cliente necesita/pidio, diferencia entre la opcion economica y la mejor, contexto (local, robo previo, dias de grabacion), marcas o modelos puntuales, y cualquier detalle de la visita."></textarea>
+        </div>
+      </section>
+
+      <!-- RESUMEN -->
+      <section class="step" data-step="resumen">
+        <div class="step-eyebrow">Revisi&oacute;n final</div>
+        <div class="step-title">Confirm&aacute; antes de enviar</div>
+        <div id="nvzResumenContent"></div>
+
+        <button type="button" class="toggle-detail" id="nvzBtnToggleDetail">Ver detalle t&eacute;cnico completo &#9662;</button>
+        <pre class="detail-pre" id="nvzDetailPre"></pre>
+
+        <div class="status-banner" id="nvzStatusBanner"></div>
+        <button type="button" class="btn-copy-fallback" id="nvzBtnCopyFallback">Copiar texto al portapapeles</button>
+      </section>
+
+      <!-- DONE -->
+      <section class="step" data-step="done">
+        <div class="done-wrap">
+          <div class="done-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h2>Visita enviada</h2>
+          <p>Qued&oacute; en la cola de visitas pendientes del agente. Pod&eacute;s cargar otra cuando quieras.</p>
+          <button type="button" class="btn-secondary" id="nvzBtnNuevaVisita">Volver</button>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="bottombar" id="nvzBottombar">
+      <button class="btn-primary" id="nvzBtnNext">Siguiente &rarr;</button>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // App de Bruno - version ESTATICA (GitHub Pages, 2026-08-29).
+  // Reemplaza la version servida por Apps Script (HtmlService), que
+  // disparaba el error "No se pudo abrir el archivo" de Google al
+  // navegar a script.google.com con varias cuentas logueadas.
+  // Esta pagina NO navega a script.google.com: habla con el backend
+  // por fetch() a los endpoints GET/POST de apps-script-backend.gs.
+  // Apps Script manda Access-Control-Allow-Origin: * en las respuestas
+  // de ContentService, asi que el fetch cross-origin desde github.io
+  // funciona y se puede leer el JSON.
+  // La KEY (APP_KEY) va embebida aca, igual que la POST_KEY del
+  // formulario de visitas - protege lectura/accion de presupuestos,
+  // no compromete la GET_KEY del agente (son claves distintas).
+  // ============================================================
+  var API = 'https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec';
+  var KEY = '1ARRvibyWVrWbSsjvQyii9fm3J6nfsT1';
+
+  // GET al backend con ?params&key=APP_KEY. Devuelve una promesa del JSON parseado.
+  function apiGet(params){
+    params.key = KEY;
+    params._ = Date.now(); // cache-buster: sin esto el navegador puede servir una lista vieja
+    var qs = Object.keys(params).map(function(k){
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    return fetch(API + '?' + qs, { cache: 'no-store' }).then(function(r){ return r.json(); });
+  }
+
+  // Logo embebido en base64 (icon-192.png de onix-formulario-visita) - una
+  // sola copia en JS para no duplicar ~35KB en el HTML (se usa en el topbar
+  // y en el brand-row del wizard).
+  var LOGO_DATA_URI = 'data:image/png;base64,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';
+  document.getElementById('logoTopbar').src = LOGO_DATA_URI;
+  document.getElementById('logoWizard').src = LOGO_DATA_URI;
+
+  var currentTab = 'pendiente_aprobacion';
+  var pollTimer = null;
+
+  function setTab(tab){
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(function(el){ el.classList.toggle('active', el.dataset.tab === tab); });
+    document.querySelectorAll('.panel').forEach(function(el){ el.classList.toggle('active', el.dataset.panel === tab); });
+    cargar(tab);
+  }
+  document.querySelectorAll('.tab').forEach(function(el){
+    el.addEventListener('click', function(){ setTab(el.dataset.tab); });
+  });
+
+  function cargar(tab){
+    if (tab === 'visitas') { cargarCitasCalendario(); return cargarVisitas(); }
+    return cargarPresupuestos(tab);
+  }
+
+  function cargarVisitas(){
+    var wrap = document.getElementById('visitasListWrap');
+    apiGet({ visitas_pendientes: 1 }).then(function(res){
+      var visitas = (res && res.visitas) || [];
+      if (!visitas.length) { wrap.innerHTML = '<div class="empty">No hay visitas pendientes.</div>'; return; }
+      wrap.innerHTML = visitas.map(function(v){
+        return '<div class="visita-row"><span class="c">' + escapeHtml(v.cliente || 'Sin nombre') + '</span>' +
+          '<span class="f">' + fechaCorta(v.fecha) + '</span></div>';
+      }).join('');
+    }).catch(function(){
+      wrap.innerHTML = '<div class="empty">No se pudo cargar.</div>';
+    });
+  }
+
+  // Citas agendadas en el calendario "Visitas Presupuesto" de Otimify (ver
+  // appListarCitasCalendario en apps-script-backend.gs). Cada una trae un
+  // boton "Agregar datos" que abre el wizard de Nueva visita con el nombre y
+  // la direccion del contacto ya completos (si Otimify los tiene - varios
+  // leads llegan sin direccion cargada, en ese caso el campo queda vacio
+  // para completarlo a mano en la visita).
+  function cargarCitasCalendario(){
+    var wrap = document.getElementById('citasCalendarioWrap');
+    apiGet({ citas: 1 }).then(function(res){
+        var citas = (res && res.citas) || [];
+        if (!citas.length) { wrap.innerHTML = '<div class="empty">No hay visitas agendadas en los proximos 30 dias.</div>'; return; }
+        wrap.innerHTML = citas.map(function(c){
+          var direccionHtml = c.direccion
+            ? '<p class="cita-direccion">' + escapeHtml(c.direccion) + '</p>'
+            : '<p class="cita-direccion sin-direccion">Sin direccion cargada en Otimify</p>';
+          return '<div class="cita-row">' +
+            '<p class="cita-nombre">' + escapeHtml(c.nombre || 'Sin nombre') + '</p>' +
+            direccionHtml +
+            '<p class="cita-fecha">' + fechaCorta(c.inicio) + '</p>' +
+            '<button type="button" class="btn-agregar-datos" data-nombre="' + escapeHtml(c.nombre || '') + '" data-direccion="' + escapeHtml(c.direccion || '') + '">Agregar datos</button>' +
+            '</div>';
+        }).join('');
+        wrap.querySelectorAll('.btn-agregar-datos').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            mostrarWizardVisita();
+            if (window.prellenarWizardVisita) {
+              window.prellenarWizardVisita(btn.dataset.nombre, btn.dataset.direccion);
+            }
+          });
+        });
+    }).catch(function(){
+      wrap.innerHTML = '<div class="empty">No se pudo cargar (revisar OTIMIFY_PIT_TOKEN en Script Properties).</div>';
+    });
+  }
+
+  function cargarPresupuestos(estado){
+    apiGet({ presupuestos: 1, estado: estado }).then(function(res){
+        var panel = document.querySelector('.panel[data-panel="' + estado + '"]');
+        var items = (res && res.presupuestos) || [];
+        if (estado === 'pendiente_aprobacion') document.getElementById('n-pendiente_aprobacion').textContent = items.length;
+        if (estado === 'aprobado') document.getElementById('n-aprobado').textContent = items.length;
+
+        if (!items.length) { panel.innerHTML = '<div class="empty">No hay nada ac&aacute;.</div>'; return; }
+        panel.innerHTML = items.map(function(p){ return renderCard(p, estado); }).join('');
+        bindCardEvents(panel);
+
+        if (estado === 'aprobado' && items.some(function(p){ return !p.pdf_url; })) {
+          if (!pollTimer) pollTimer = setInterval(function(){ if (currentTab === 'aprobado') cargarPresupuestos('aprobado'); }, 15000);
+        } else if (pollTimer) {
+          clearInterval(pollTimer); pollTimer = null;
+        }
+    }).catch(function(){
+      document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">No se pudo cargar.</div>';
+    });
+  }
+
+  // Lista de items con link a cada producto, dentro de una opcion - para que
+  // Bruno/Antonella puedan verificar modelo/proveedor/precio antes de aprobar
+  // (mismo criterio que el revision_[cliente].html interno, ver PASO 8.5/9.5
+  // de CLAUDE.md). `items` es opcional: si el agente no lo mando, no se
+  // muestra nada (compatibilidad hacia atras con presupuestos viejos).
+  function renderItemsList(items){
+    if (!items || !items.length) return '';
+    return '<div class="items-list">' + items.map(function(it){
+      var nombre = escapeHtml(it.nombre || 'Item');
+      var linkHtml = it.url
+        ? '<a href="' + escapeHtml(it.url) + '" target="_blank" rel="noopener">' + nombre + '</a>'
+        : '<span class="sinlink">' + nombre + '</span>';
+      var cantPrefix = it.cantidad ? (it.cantidad + '&times; ') : '';
+      var precioTxt = (it.precio_unitario != null && it.precio_unitario !== '')
+        ? (it.moneda || 'USD') + ' ' + it.precio_unitario
+        : '';
+      var provHtml = it.proveedor ? '<span class="item-prov">' + escapeHtml(it.proveedor) + '</span>' : '';
+      return '<div class="item-row">' +
+        '<span class="item-nombre">' + cantPrefix + linkHtml + provHtml + '</span>' +
+        '<span class="item-precio">' + escapeHtml(precioTxt) + '</span>' +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  function renderCard(p, estado){
+    var resumen = p.resumen || { subtitulo: '', opciones: [] };
+    var itemsPorOpcion = p.items || null;
+    var opcionesHtml = (resumen.opciones || []).map(function(o, idx){
+      var itemsDeEstaOpcion = itemsPorOpcion ? (idx === 0 ? itemsPorOpcion.opcion1 : itemsPorOpcion.opcion2) : null;
+      return '<div class="opcion">' +
+        (o.nombre ? '<p class="nombre">' + escapeHtml(o.nombre) + '</p>' : '') +
+        '<p class="cuerpo">' + escapeHtml(o.cuerpo || '') + '</p>' +
+        renderItemsList(itemsDeEstaOpcion) +
+        '<p class="precio">' + escapeHtml(o.precio || '') + '</p>' +
+        '</div>';
+    }).join('');
+
+    var comentariosHtml = (p.comentarios || []).map(function(c){
+      return '<div class="comentario"><span class="autor">' + escapeHtml(c.autor) + '</span> \u00b7 ' + fechaCorta(c.fecha) + '<br>' + escapeHtml(c.texto) + '</div>';
+    }).join('');
+
+    var acciones = '';
+    if (estado === 'pendiente_aprobacion') {
+      acciones =
+        '<textarea class="comentario-input" placeholder="Comentario (opcional para aprobar, obligatorio para rechazar)"></textarea>' +
+        '<div class="row">' +
+          '<button class="btn btn-aprobar" data-accion="aprobar" data-id="' + p.id + '">Aprobar</button>' +
+          '<button class="btn btn-rechazar" data-accion="rechazar" data-id="' + p.id + '">Rechazar / comentar</button>' +
+        '</div>';
+    } else if (estado === 'aprobado') {
+      if (p.pdf_url) {
+        acciones =
+          '<span class="estado-chip estado-listo">PDF listo</span>' +
+          '<a class="btn-descargar" href="' + p.pdf_url + '" target="_blank" rel="noopener">Descargar PDF</a>' +
+          '<div class="row"><button class="btn btn-enviado" data-accion="marcar_enviado" data-id="' + p.id + '">Marcar enviado</button></div>';
+      } else {
+        acciones = '<span class="estado-chip estado-generando">Generando PDF&hellip;</span>';
+      }
+    }
+
+    return '<div class="card">' +
+      '<p class="cliente">' + escapeHtml(p.cliente || 'Sin nombre') + '</p>' +
+      '<p class="fecha">' + fechaCorta(p.fecha_creado) + '</p>' +
+      (resumen.subtitulo ? '<p class="subtitulo">' + escapeHtml(resumen.subtitulo) + '</p>' : '') +
+      opcionesHtml +
+      (comentariosHtml ? '<div class="comentarios">' + comentariosHtml + '</div>' : '') +
+      acciones +
+      '</div>';
+  }
+
+  function bindCardEvents(panel){
+    panel.querySelectorAll('button[data-accion]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var accion = btn.dataset.accion;
+        var id = btn.dataset.id;
+        var card = btn.closest('.card');
+        var comentarioEl = card.querySelector('.comentario-input');
+        var comentario = comentarioEl ? comentarioEl.value.trim() : '';
+
+        if (accion === 'rechazar' && !comentario) {
+          alert('Para rechazar, deja un comentario explicando por que.');
+          return;
+        }
+
+        btn.disabled = true;
+        apiGet({ accion: accion, id: id, comentario: comentario, autor: 'Bruno' })
+          .then(function(res){
+            if (res && res.ok) { cargar(currentTab); }
+            else { btn.disabled = false; alert('No se pudo: ' + ((res && res.error) || 'error desconocido')); }
+          })
+          .catch(function(){ btn.disabled = false; alert('No se pudo conectar. Proba de nuevo.'); });
+      });
+    });
+  }
+
+  function fechaCorta(iso){
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  // ---- Wizard de nueva visita (integrado 2026-08-26) ----
+  // mostrarWizardVisita/ocultarWizardVisita viven aca (script principal) porque
+  // manipulan el chrome propio de esta app (header+tabs). El wizard en si vive
+  // en su propio bloque de script mas abajo (su propia IIFE, ver comentario ahi) y llama
+  // a ocultarWizardVisita() cuando termina - es una funcion global normal, no
+  // hace falta exponerla con window.x explicitamente.
+  function mostrarWizardVisita(){
+    document.getElementById('brunoChrome').style.display = 'none';
+    document.querySelectorAll('.panel.active').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('nvz').style.display = 'flex';
+    if (window.resetWizardVisita) window.resetWizardVisita();
+    window.scrollTo(0, 0);
+  }
+  function ocultarWizardVisita(){
+    document.getElementById('nvz').style.display = 'none';
+    document.getElementById('brunoChrome').style.display = '';
+    setTab('visitas');
+  }
+  document.getElementById('btnNuevaVisitaShow').addEventListener('click', mostrarWizardVisita);
+
+  setTab('pendiente_aprobacion');
+</script>
+
+<script>
+(function(){
+
+  // ============================================================
+  // Wizard de "Nueva visita" (integrado 2026-08-26) - puerto casi
+  // literal de onix-formulario-visita/index.html, con estos cambios:
+  //  - todos los ids llevan prefijo nvz_/nvz (ver CSS/HTML arriba)
+  //    para no colisionar con el resto de la app.
+  //  - el envio usa POST { tipo:"visita_nueva", key:APP_KEY } al
+  //    backend (no POST_KEY), no-cors fire-and-forget - ver submitVisita.
+  //    El form standalone publico de GitHub Pages sigue usando el alta
+  //    legacy con POST_KEY, sin cambios.
+  //  - "Volver" ya no hace window.location.reload() (eso recargaria
+  //    TODA la app de Bruno) - llama a ocultarWizardVisita() (definida
+  //    en el script principal de arriba) para volver a la lista.
+  //  - se expone window.resetWizardVisita para que mostrarWizardVisita()
+  //    (script principal) limpie el form cada vez que se abre "+ Nueva
+  //    visita" (sin esto, el segundo uso arrancaria con los datos del
+  //    primero todavia cargados).
+  // KEY (APP_KEY) se reusa del script principal de arriba - misma
+  // pagina, mismo scope global, no hace falta declararla de nuevo.
+  // ============================================================
+
+  function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function numVal(id){ var n = parseFloat(val(id)); return isNaN(n) ? 0 : n; }
+  function numOrNull(id){ var v = val(id); if (v === '') return null; var n = parseFloat(v); return isNaN(n) ? null : n; }
+  function chk(id){ var el = document.getElementById(id); return !!(el && el.checked); }
+  function setFieldInvalid(fieldId, invalid){
+    var el = document.getElementById(fieldId);
+    if (el) el.classList.toggle('invalid', invalid);
+  }
+
+  var nvzToastTimer = null;
+  function nvzToast(msg){
+    var el = document.getElementById('nvzToastMsg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'nvzToastMsg';
+      el.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);' +
+        'background:#171a1f;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;' +
+        'font-weight:600;z-index:60;box-shadow:0 8px 20px -6px rgba(0,0,0,.4);max-width:88%;text-align:center;transition:opacity .2s;';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(nvzToastTimer);
+    nvzToastTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2400);
+  }
+
+  // ---- grupos de camaras ----
+  var grupoCamSeq = 0;
+  function agregarGrupoCamara(){
+    grupoCamSeq++;
+    var cont = document.getElementById('nvz_grupos_container');
+    var div = document.createElement('div');
+    div.className = 'group-card';
+    div.innerHTML =
+      '<div class="group-card-head"><strong>Grupo ' + grupoCamSeq + '</strong>' +
+      '<button type="button" class="btn-remove" data-remove-grupo>\u2715 quitar</button></div>' +
+      '<div class="field"><label>Cantidad de camaras</label><input type="number" class="g-cantidad" min="1" inputmode="numeric" placeholder="Ej: 2"></div>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>Resolucion minima</label><select class="g-resolucion"><option value="">Sin preferencia</option><option value="2MP">2 MP</option><option value="4MP">4 MP</option><option value="5MP">5 MP</option><option value="8MP">8 MP (4K)</option></select></div>' +
+        '<div class="field"><label>Vision nocturna (m)</label><input type="number" class="g-ir" min="0" inputmode="numeric" placeholder="Ej: 30"></div>' +
+      '</div>' +
+      '<div class="field"><label>Este grupo necesita</label>' +
+        '<div class="check-grid">' +
+          '<label class="check-pill"><input type="checkbox" class="g-audio"><span>Audio</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-exterior"><span>Exterior (IP66+)</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-color"><span>Color nocturno</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-ia"><span>IA / AcuSense</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-facial"><span>Facial</span></label>' +
+          '<label class="check-pill"><input type="checkbox" class="g-lpr"><span>Lectura de patentes</span></label>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field"><label>Area / distancia a cubrir (opcional)</label><input type="text" class="g-area" placeholder="Ej: porton a 15m, pasillo 8m"></div>';
+    cont.appendChild(div);
+    div.querySelector('[data-remove-grupo]').addEventListener('click', function(){ div.remove(); });
+  }
+  document.getElementById('nvzBtnAddGrupo').addEventListener('click', agregarGrupoCamara);
+  function ensureAtLeastOneGrupo(){
+    if (document.querySelectorAll('#nvz_grupos_container .group-card').length === 0) agregarGrupoCamara();
+  }
+
+  // ---- alarma conditionals ----
+  document.getElementById('nvz_alarma_marca').addEventListener('change', function(){
+    var marca = this.value;
+    document.getElementById('nvz_alarma_conexion_wrap').style.display = marca === 'Intelbras' ? 'block' : 'none';
+    if (marca !== 'Intelbras') document.getElementById('nvz_alarma_cable_wrap').style.display = 'none';
+    else toggleAlarmaCable();
+  });
+  document.getElementById('nvz_alarma_conexion').addEventListener('change', toggleAlarmaCable);
+  function toggleAlarmaCable(){
+    var conexion = val('nvz_alarma_conexion');
+    document.getElementById('nvz_alarma_cable_wrap').style.display = (conexion === 'cableada' || conexion === 'mixta') ? 'block' : 'none';
+  }
+
+  // ---- daisa conditional ----
+  document.getElementById('nvz_daisa_metros').addEventListener('input', function(){
+    document.getElementById('nvz_daisa_accesorios_row').style.display = parseFloat(this.value) > 0 ? 'block' : 'none';
+  });
+
+  // ---- datos JSON estructurado (onix-visita-v1) ----
+  function construirDatosJSON(){
+    var horas = numVal('nvz_horas');
+    var comidaVal = val('nvz_comida');
+    var incluirComida = comidaVal === 'si' || (comidaVal === 'auto' && horas > 4);
+
+    return {
+      _schema: 'onix-visita-v1',
+      cliente: {
+        nombre: val('nvz_cliente_nombre'),
+        direccion: val('nvz_cliente_direccion'),
+        fecha_visita: val('nvz_fecha_visita'),
+        moneda_preferida: val('nvz_moneda'),
+        presupuesto_cliente: numOrNull('nvz_presupuesto_cliente')
+      },
+      sistemas: {
+        wifi: chk('nvz_tipo_wifi'), ip: chk('nvz_tipo_ip'), analog: chk('nvz_tipo_analog'),
+        video: chk('nvz_tipo_video'), alarma: chk('nvz_tipo_alarma'),
+        portero2h: chk('nvz_tipo_portero2h'), control_acceso: chk('nvz_tipo_control_acceso')
+      },
+      wifi: !chk('nvz_tipo_wifi') ? null : {
+        camaras: numVal('nvz_wifi_camaras'), camaras_ext: numVal('nvz_wifi_camaras_ext'), camaras_int: numVal('nvz_wifi_camaras_int'),
+        sd: val('nvz_wifi_sd') || null, repetidor: val('nvz_wifi_repetidor'), cable_corriente: numVal('nvz_wifi_cable'),
+        marca: val('nvz_wifi_marca') || null, ups: val('nvz_wifi_ups')
+      },
+      ip: !chk('nvz_tipo_ip') ? null : {
+        camaras: numVal('nvz_ip_camaras'), camaras_ext: numVal('nvz_ip_camaras_ext'), camaras_int: numVal('nvz_ip_camaras_int'),
+        nvr_canales: numOrNull('nvz_ip_nvr'), disco: val('nvz_ip_disco') || null, switch_poe: val('nvz_ip_switch') || null,
+        cable_utp: numVal('nvz_ip_cable'), marca: val('nvz_ip_marca') || null, ups: val('nvz_ip_ups')
+      },
+      analog: !chk('nvz_tipo_analog') ? null : {
+        camaras: numVal('nvz_analog_camaras'), camaras_ext: numVal('nvz_analog_camaras_ext'), camaras_int: numVal('nvz_analog_camaras_int'),
+        dvr_canales: numOrNull('nvz_analog_dvr'), disco: val('nvz_analog_disco') || null, cable: numVal('nvz_analog_cable'),
+        ducto: numVal('nvz_analog_ducto'), marca: val('nvz_analog_marca') || null, ups: val('nvz_analog_ups')
+      },
+      video: !chk('nvz_tipo_video') ? null : {
+        pantallas: numVal('nvz_video_pantallas'), cerradura: val('nvz_video_cerradura'), cable: numVal('nvz_video_cable'),
+        marca: val('nvz_video_marca') || null, obs: val('nvz_video_obs') || null, ups: val('nvz_video_ups')
+      },
+      alarma: !chk('nvz_tipo_alarma') ? null : {
+        marca: val('nvz_alarma_marca') || null,
+        conexion: (val('nvz_alarma_marca').toLowerCase().indexOf('hikvision') !== -1) ? 'inalambrica' : (val('nvz_alarma_conexion') || null),
+        cable_utp: numVal('nvz_alarma_cable_utp'), central: val('nvz_alarma_central'),
+        sensor_puerta: numVal('nvz_alarma_sensor_puerta'), sensor_mov_int: numVal('nvz_alarma_sensor_mov_int'),
+        sensor_mov_ext: numVal('nvz_alarma_sensor_mov_ext'), sirena: numVal('nvz_alarma_sirena'),
+        teclado: numVal('nvz_alarma_teclado'), control: numVal('nvz_alarma_control'),
+        bateria: val('nvz_alarma_bateria'), obs: val('nvz_alarma_obs') || null
+      },
+      portero2h: !chk('nvz_tipo_portero2h') ? null : {
+        aptos: numVal('nvz_portero2h_aptos'), cerradura: val('nvz_portero2h_cerradura'), cable: numVal('nvz_portero2h_cable'),
+        marca: val('nvz_portero2h_marca') || null, obs: val('nvz_portero2h_obs') || null, ups: val('nvz_portero2h_ups')
+      },
+      control_acceso: !chk('nvz_tipo_control_acceso') ? null : {
+        puertas: numVal('nvz_ctrlacceso_puertas'), sentido: val('nvz_ctrlacceso_sentido'), cerradura: val('nvz_ctrlacceso_cerradura'),
+        credencial: {
+          rfid: chk('nvz_ctrlacceso_rfid'), huella: chk('nvz_ctrlacceso_huella'),
+          facial: chk('nvz_ctrlacceso_facial'), pin: chk('nvz_ctrlacceso_pin')
+        },
+        marca: val('nvz_ctrlacceso_marca') || null, cable: numVal('nvz_ctrlacceso_cable'),
+        obs: val('nvz_ctrlacceso_obs') || null, ups: val('nvz_ctrlacceso_ups')
+      },
+      grupos_camaras: !(chk('nvz_tipo_wifi') || chk('nvz_tipo_ip') || chk('nvz_tipo_analog')) ? null :
+        Array.from(document.querySelectorAll('#nvz_grupos_container .group-card')).map(function(g){
+          var q = g.querySelector('.g-cantidad').value;
+          var ir = g.querySelector('.g-ir').value;
+          return {
+            cantidad: q ? parseInt(q, 10) : 0,
+            resolucion_min: g.querySelector('.g-resolucion').value || null,
+            ir_m: ir ? parseInt(ir, 10) : null,
+            audio: g.querySelector('.g-audio').checked,
+            exterior: g.querySelector('.g-exterior').checked,
+            color_noct: g.querySelector('.g-color').checked,
+            ia: g.querySelector('.g-ia').checked,
+            facial: g.querySelector('.g-facial').checked,
+            lpr: g.querySelector('.g-lpr').checked,
+            area: g.querySelector('.g-area').value.trim() || null
+          };
+        }).filter(function(x){ return x.cantidad > 0; }),
+      daisa: {
+        metros: numVal('nvz_daisa_metros'), ducto_metros: numVal('nvz_ducto_metros'), gabinete: val('nvz_gabinete'),
+        codos: numVal('nvz_daisa_codos'), grampas: numVal('nvz_daisa_grampas'), uniones: numVal('nvz_daisa_uniones'),
+        corrugados: numVal('nvz_daisa_corrugados')
+      },
+      logistica: { horas: horas, km: numVal('nvz_km'), comida: incluirComida, extras_usd: 100 },
+      notas: val('nvz_notas') || null
+    };
+  }
+
+  // ---- texto prompt (fallback en prosa) ----
+  function nombreSistemas(){
+    var s = [];
+    if (chk('nvz_tipo_wifi')) s.push('WiFi');
+    if (chk('nvz_tipo_ip')) s.push('IP (NVR)');
+    if (chk('nvz_tipo_analog')) s.push('Analogico (DVR)');
+    if (chk('nvz_tipo_video')) s.push('Videoporteria');
+    if (chk('nvz_tipo_alarma')) s.push('Alarma');
+    if (chk('nvz_tipo_portero2h')) s.push('Portero 2 hilos');
+    if (chk('nvz_tipo_control_acceso')) s.push('Control de Acceso');
+    return s;
+  }
+
+  function buildPromptText(){
+    var sistemas = nombreSistemas();
+    var out = '=== DATOS DE VISITA TECNICA - ONIX SYSTEM ===\n\n';
+    out += 'CLIENTE: ' + val('nvz_cliente_nombre') + '\n';
+    out += 'DIRECCION: ' + val('nvz_cliente_direccion') + '\n';
+    out += 'FECHA DE VISITA: ' + val('nvz_fecha_visita') + '\n';
+    out += 'MONEDA PREFERIDA: ' + val('nvz_moneda') + '\n';
+    out += 'PRESUPUESTO DISPONIBLE DEL CLIENTE: ' + (val('nvz_presupuesto_cliente') || 'No indicado') + '\n\n';
+    out += 'SISTEMAS A INSTALAR: ' + sistemas.join(' + ') + '\n\n';
+
+    if (chk('nvz_tipo_wifi')) {
+      out += '--- SISTEMA WiFi ---\n';
+      out += 'Cantidad de camaras: ' + val('nvz_wifi_camaras') + '\n';
+      out += 'Camaras de exterior (IP67): ' + (val('nvz_wifi_camaras_ext') || '0') + '\n';
+      out += 'Camaras de interior: ' + (val('nvz_wifi_camaras_int') || '0') + '\n';
+      out += 'Tarjeta de memoria por camara: ' + (val('nvz_wifi_sd') || 'a definir segun precio') + '\n';
+      out += 'Repetidor WiFi necesario: ' + val('nvz_wifi_repetidor') + '\n';
+      out += 'Metros de cable de corriente: ' + (val('nvz_wifi_cable') || 'a confirmar en visita') + '\n';
+      if (val('nvz_wifi_marca')) out += 'Marcas/modelos preferidos: ' + val('nvz_wifi_marca') + '\n';
+      out += 'UPS: ' + val('nvz_wifi_ups') + '\n\n';
+    }
+    if (chk('nvz_tipo_ip')) {
+      out += '--- SISTEMA IP (NVR) ---\n';
+      out += 'Cantidad de camaras: ' + val('nvz_ip_camaras') + '\n';
+      out += 'Camaras de exterior (IP67): ' + (val('nvz_ip_camaras_ext') || '0') + '\n';
+      out += 'Camaras de interior: ' + (val('nvz_ip_camaras_int') || '0') + '\n';
+      out += 'NVR: ' + (val('nvz_ip_nvr') ? val('nvz_ip_nvr') + ' canales' : 'a definir') + '\n';
+      out += 'Disco duro: ' + (val('nvz_ip_disco') || 'a definir') + '\n';
+      out += 'Switch POE: ' + (val('nvz_ip_switch') || 'a definir') + '\n';
+      out += 'Metros de cable UTP: ' + (val('nvz_ip_cable') || '0') + '\n';
+      if (val('nvz_ip_marca')) out += 'Marcas/modelos preferidos: ' + val('nvz_ip_marca') + '\n';
+      out += 'UPS: ' + val('nvz_ip_ups') + '\n\n';
+    }
+    if (chk('nvz_tipo_analog')) {
+      out += '--- SISTEMA ANALOGICO (DVR) ---\n';
+      out += 'Cantidad de camaras: ' + val('nvz_analog_camaras') + '\n';
+      out += 'Camaras de exterior (IP67): ' + (val('nvz_analog_camaras_ext') || '0') + '\n';
+      out += 'Camaras de interior: ' + (val('nvz_analog_camaras_int') || '0') + '\n';
+      out += 'DVR: ' + (val('nvz_analog_dvr') ? val('nvz_analog_dvr') + ' canales' : 'a definir') + '\n';
+      out += 'Disco duro: ' + (val('nvz_analog_disco') || 'a definir') + '\n';
+      out += 'Metros de cable: ' + (val('nvz_analog_cable') || '0') + '\n';
+      out += 'Metros de ducto: ' + (val('nvz_analog_ducto') || '0') + '\n';
+      if (val('nvz_analog_marca')) out += 'Marcas/modelos preferidos: ' + val('nvz_analog_marca') + '\n';
+      out += 'UPS: ' + val('nvz_analog_ups') + '\n\n';
+    }
+    if (chk('nvz_tipo_video')) {
+      out += '--- VIDEOPORTERIA ---\n';
+      out += 'Pantallas interiores: ' + val('nvz_video_pantallas') + '\n';
+      out += 'Tipo de cerradura: ' + val('nvz_video_cerradura') + '\n';
+      out += 'Metros de cable: ' + (val('nvz_video_cable') || '0') + '\n';
+      if (val('nvz_video_marca')) out += 'Marca/modelo preferido: ' + val('nvz_video_marca') + '\n';
+      if (val('nvz_video_obs')) out += 'Observaciones: ' + val('nvz_video_obs') + '\n';
+      out += 'UPS: ' + val('nvz_video_ups') + '\n\n';
+    }
+    if (chk('nvz_tipo_alarma')) {
+      out += '--- SISTEMA DE ALARMA ---\n';
+      out += 'Marca: ' + (val('nvz_alarma_marca') || 'a definir') + '\n';
+      var marcaAlarma = val('nvz_alarma_marca');
+      if (marcaAlarma === 'Hikvision AX PRO') {
+        out += 'Tipo de conexion: Inalambrica\n';
+      } else if (marcaAlarma === 'Intelbras') {
+        out += 'Tipo de conexion: ' + (val('nvz_alarma_conexion') || 'a definir') + '\n';
+        if (val('nvz_alarma_conexion') === 'cableada' || val('nvz_alarma_conexion') === 'mixta') {
+          out += 'Metros de cable UTP: ' + (val('nvz_alarma_cable_utp') || '0') + '\n';
+        }
+      }
+      out += 'Central incluida: ' + val('nvz_alarma_central') + '\n';
+      out += 'Sensores de puerta/ventana: ' + (val('nvz_alarma_sensor_puerta') || '0') + '\n';
+      out += 'Sensores de movimiento interior: ' + (val('nvz_alarma_sensor_mov_int') || '0') + '\n';
+      out += 'Sensores de movimiento exterior: ' + (val('nvz_alarma_sensor_mov_ext') || '0') + '\n';
+      out += 'Sirenas: ' + (val('nvz_alarma_sirena') || '0') + '\n';
+      out += 'Teclados: ' + (val('nvz_alarma_teclado') || '0') + '\n';
+      out += 'Controles remotos: ' + (val('nvz_alarma_control') || '0') + '\n';
+      out += 'Bateria de respaldo: ' + val('nvz_alarma_bateria') + '\n';
+      if (val('nvz_alarma_obs')) out += 'Observaciones: ' + val('nvz_alarma_obs') + '\n';
+      out += '\n';
+    }
+    if (chk('nvz_tipo_portero2h')) {
+      out += '--- PORTERO (2 HILOS, AUDIO) ---\n';
+      out += 'Cantidad de apartamentos/estaciones: ' + val('nvz_portero2h_aptos') + '\n';
+      out += 'Tipo de cerradura: ' + val('nvz_portero2h_cerradura') + '\n';
+      out += 'Metros de cable: ' + (val('nvz_portero2h_cable') || '0') + '\n';
+      if (val('nvz_portero2h_marca')) out += 'Marca/modelo preferido: ' + val('nvz_portero2h_marca') + '\n';
+      if (val('nvz_portero2h_obs')) out += 'Observaciones: ' + val('nvz_portero2h_obs') + '\n';
+      out += 'UPS: ' + val('nvz_portero2h_ups') + '\n\n';
+    }
+    if (chk('nvz_tipo_control_acceso')) {
+      out += '--- CONTROL DE ACCESO ---\n';
+      out += 'Cantidad de puertas/puntos: ' + val('nvz_ctrlacceso_puertas') + '\n';
+      out += 'Sentido: ' + (val('nvz_ctrlacceso_sentido') === 'entrada_salida' ? 'Entrada y salida (2 lectoras)' : 'Solo entrada (1 lectora)') + '\n';
+      out += 'Tipo de cerradura: ' + val('nvz_ctrlacceso_cerradura') + '\n';
+      var credenciales = [];
+      if (chk('nvz_ctrlacceso_rfid')) credenciales.push('Tarjeta/tag RFID');
+      if (chk('nvz_ctrlacceso_huella')) credenciales.push('Huella dactilar');
+      if (chk('nvz_ctrlacceso_facial')) credenciales.push('Facial');
+      if (chk('nvz_ctrlacceso_pin')) credenciales.push('Clave/PIN o app celular');
+      out += 'Tipo de credencial: ' + (credenciales.length ? credenciales.join(', ') : 'a definir') + '\n';
+      if (val('nvz_ctrlacceso_marca')) out += 'Marca/modelo preferido: ' + val('nvz_ctrlacceso_marca') + '\n';
+      out += 'Metros de cable: ' + (val('nvz_ctrlacceso_cable') || '0') + '\n';
+      if (val('nvz_ctrlacceso_obs')) out += 'Observaciones: ' + val('nvz_ctrlacceso_obs') + '\n';
+      out += 'UPS: ' + val('nvz_ctrlacceso_ups') + '\n\n';
+    }
+    if (chk('nvz_tipo_wifi') || chk('nvz_tipo_ip') || chk('nvz_tipo_analog')) {
+      var grupos = Array.from(document.querySelectorAll('#nvz_grupos_container .group-card')).map(function(g){
+        var q = parseInt(g.querySelector('.g-cantidad').value, 10) || 0;
+        if (!q) return null;
+        var feats = [];
+        if (g.querySelector('.g-resolucion').value) feats.push(g.querySelector('.g-resolucion').value);
+        if (g.querySelector('.g-ir').value) feats.push('IR ' + g.querySelector('.g-ir').value + 'm');
+        if (g.querySelector('.g-audio').checked) feats.push('audio');
+        if (g.querySelector('.g-exterior').checked) feats.push('exterior IP66+');
+        if (g.querySelector('.g-color').checked) feats.push('color nocturno');
+        if (g.querySelector('.g-ia').checked) feats.push('IA/AcuSense');
+        if (g.querySelector('.g-facial').checked) feats.push('reconocimiento facial');
+        if (g.querySelector('.g-lpr').checked) feats.push('lectura de patentes');
+        var area = g.querySelector('.g-area').value.trim();
+        return q + ' camara(s): ' + (feats.length ? feats.join(', ') : 'basicas') + (area ? ' - ' + area : '');
+      }).filter(Boolean);
+      if (grupos.length) {
+        out += '--- REQUISITOS DE CAMARAS POR GRUPOS (cotizar cada grupo con la mas barata que cumpla) ---\n';
+        grupos.forEach(function(r, i){ out += 'Grupo ' + (i + 1) + ': ' + r + '\n'; });
+        out += '\n';
+      }
+    }
+    out += '--- CABLEADO Y DAISA ---\n';
+    out += 'Metros de cano daisa (Fivisa): ' + val('nvz_daisa_metros') + '\n';
+    out += 'Metros de ducto: ' + val('nvz_ducto_metros') + '\n';
+    out += 'Gabinete (Balanir): ' + val('nvz_gabinete') + '\n';
+    if (parseFloat(val('nvz_daisa_metros')) > 0) {
+      out += 'Codos para daisa: ' + val('nvz_daisa_codos') + '\n';
+      out += 'Grampas para daisa: ' + val('nvz_daisa_grampas') + '\n';
+      out += 'Uniones para daisa: ' + val('nvz_daisa_uniones') + '\n';
+      out += 'Corrugados para daisa: ' + val('nvz_daisa_corrugados') + '\n';
+    }
+    out += '\n';
+    out += '--- MANO DE OBRA Y LOGISTICA ---\n';
+    out += 'Horas de trabajo: ' + val('nvz_horas') + '\n';
+    out += 'Kilometros desde el taller: ' + val('nvz_km') + '\n';
+    var horas2 = parseFloat(val('nvz_horas')) || 0;
+    var comidaVal2 = val('nvz_comida');
+    var incluirComida2 = comidaVal2 === 'si' || (comidaVal2 === 'auto' && horas2 > 4);
+    out += 'Incluir comida ($500 UYU)?: ' + (incluirComida2 ? 'Si' : 'No') + '\n';
+    out += 'Extras fijos: USD 100 (siempre)\n\n';
+    if (val('nvz_notas')) out += '--- NOTAS ---\n' + val('nvz_notas') + '\n\n';
+    out += '=== FIN DE DATOS ===\n\n';
+    out += 'INSTRUCCION: Con estos datos, seguir el flujo del agente de presupuestos de Onix System (CLAUDE.md).';
+    return out;
+  }
+
+  // ---- resumen ----
+  var NOMBRE_SISTEMA_CHIP = {
+    nvz_tipo_wifi: 'Camaras WiFi', nvz_tipo_ip: 'Camaras IP', nvz_tipo_analog: 'Analogico',
+    nvz_tipo_video: 'Videoporteria', nvz_tipo_alarma: 'Alarma', nvz_tipo_portero2h: 'Portero 2h',
+    nvz_tipo_control_acceso: 'Control de acceso'
+  };
+  function renderResumen(){
+    var chips = Object.keys(NOMBRE_SISTEMA_CHIP).filter(chk).map(function(id){
+      return '<span class="summary-chip">' + NOMBRE_SISTEMA_CHIP[id] + '</span>';
+    }).join('');
+
+    var html = '';
+    html += '<div class="summary-block"><h4>Cliente</h4>' +
+      '<p><strong>' + (val('nvz_cliente_nombre') || '-') + '</strong></p>' +
+      '<p>' + (val('nvz_cliente_direccion') || 'Sin direccion') + '</p>' +
+      '<p>' + (val('nvz_fecha_visita') || '-') + ' - Presupuesto: ' + (val('nvz_presupuesto_cliente') || 'no indicado') + '</p>' +
+      '</div>';
+
+    html += '<div class="summary-block"><h4>Sistemas</h4><div class="summary-chip-row">' + (chips || '<span class="summary-chip">Ninguno seleccionado</span>') + '</div></div>';
+
+    html += '<div class="summary-block"><h4>Mano de obra y logistica</h4>' +
+      '<p>' + (val('nvz_horas') || '0') + ' h de trabajo - ' + (val('nvz_km') || '0') + ' km desde el taller</p>' +
+      '</div>';
+
+    if (val('nvz_notas')) {
+      html += '<div class="summary-block"><h4>Notas</h4><p>' + val('nvz_notas').replace(/</g,'&lt;') + '</p></div>';
+    }
+
+    document.getElementById('nvzResumenContent').innerHTML = html;
+    document.getElementById('nvzDetailPre').textContent = buildPromptText();
+  }
+
+  document.getElementById('nvzBtnToggleDetail').addEventListener('click', function(){
+    var pre = document.getElementById('nvzDetailPre');
+    var show = !pre.classList.contains('show');
+    pre.classList.toggle('show', show);
+    this.textContent = show ? 'Ocultar detalle tecnico \u25b4' : 'Ver detalle tecnico completo \u25be';
+  });
+
+  document.getElementById('nvzBtnCopyFallback').addEventListener('click', function(){
+    navigator.clipboard.writeText(buildPromptText()).then(function(){
+      var btnCopy = document.getElementById('nvzBtnCopyFallback');
+      btnCopy.textContent = 'Copiado!';
+      setTimeout(function(){ btnCopy.textContent = 'Copiar texto al portapapeles'; }, 2000);
+    });
+  });
+
+  // ---- envio al backend ----
+  function mostrarStatus(tipo, mensaje){
+    var el = document.getElementById('nvzStatusBanner');
+    el.className = 'status-banner show ' + tipo;
+    el.textContent = mensaje;
+  }
+
+  function submitVisita(){
+    var btn = document.getElementById('nvzBtnNext');
+    btn.disabled = true;
+    document.getElementById('nvzBtnCopyFallback').classList.remove('show');
+    mostrarStatus('sending', 'Enviando...');
+
+    var promptText = buildPromptText();
+    var datosJson = JSON.stringify(construirDatosJSON());
+    // POST no-cors + fire-and-forget, igual que el formulario standalone de
+    // onix-formulario-visita: Apps Script responde con un 302 a una URL de
+    // "echo" que en no-cors queda opaca, pero la visita se guarda igual. El
+    // .catch solo salta si el fetch falla de verdad (sin red).
+    var payload = {
+      tipo: 'visita_nueva', key: KEY,
+      cliente: val('nvz_cliente_nombre'), prompt: promptText, datos_json: datosJson
+    };
+    fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    }).then(function(){
+      currentStepId = 'done';
+      render();
+    }).catch(function(err){
+      mostrarStatus('error', 'Error al enviar: ' + (err && err.message ? err.message : err) + ' - proba de nuevo o copia el texto.');
+      document.getElementById('nvzBtnCopyFallback').classList.add('show');
+      btn.disabled = false;
+    });
+  }
+
+  document.getElementById('nvzBtnNuevaVisita').addEventListener('click', function(){
+    ocultarWizardVisita();
+  });
+
+  // ---- wizard: pasos y navegacion ----
+  var STEP_DEFS = [
+    { id: 'cliente' },
+    { id: 'sistemas' },
+    { id: 'wifi', show: function(){ return chk('nvz_tipo_wifi'); } },
+    { id: 'ip', show: function(){ return chk('nvz_tipo_ip'); } },
+    { id: 'analog', show: function(){ return chk('nvz_tipo_analog'); } },
+    { id: 'camgroups', show: function(){ return chk('nvz_tipo_wifi') || chk('nvz_tipo_ip') || chk('nvz_tipo_analog'); } },
+    { id: 'video', show: function(){ return chk('nvz_tipo_video'); } },
+    { id: 'alarma', show: function(){ return chk('nvz_tipo_alarma'); } },
+    { id: 'portero2h', show: function(){ return chk('nvz_tipo_portero2h'); } },
+    { id: 'ctrlacceso', show: function(){ return chk('nvz_tipo_control_acceso'); } },
+    { id: 'daisa' },
+    { id: 'logistica' },
+    { id: 'notas' },
+    { id: 'resumen' }
+  ];
+
+  var REQUIRED_FIELD = {
+    cliente: { field: 'nvz_cliente_nombre', box: 'nvz_f_cliente_nombre', msg: 'Completa el nombre del cliente' },
+    sistemas: { custom: function(){ return STEP_DEFS.slice(2, 10).some(function(s){ return s.show && s.show(); }) || Object.keys(NOMBRE_SISTEMA_CHIP).some(chk); }, msg: 'Selecciona al menos un tipo de sistema' },
+    wifi: { field: 'nvz_wifi_camaras', box: 'nvz_f_wifi_camaras', msg: 'Completa la cantidad de camaras' },
+    ip: { field: 'nvz_ip_camaras', box: 'nvz_f_ip_camaras', msg: 'Completa la cantidad de camaras' },
+    analog: { field: 'nvz_analog_camaras', box: 'nvz_f_analog_camaras', msg: 'Completa la cantidad de camaras' },
+    video: { field: 'nvz_video_pantallas', box: 'nvz_f_video_pantallas', msg: 'Completa la cantidad de pantallas' },
+    portero2h: { field: 'nvz_portero2h_aptos', box: 'nvz_f_portero2h_aptos', msg: 'Completa la cantidad de apartamentos' },
+    ctrlacceso: { field: 'nvz_ctrlacceso_puertas', box: 'nvz_f_ctrlacceso_puertas', msg: 'Completa la cantidad de puertas' },
+    logistica: { field: 'nvz_horas', box: 'nvz_f_horas', msg: 'Completa las horas de trabajo' }
+  };
+
+  function validateStep(id){
+    var rule = REQUIRED_FIELD[id];
+    if (!rule) return true;
+    var ok = rule.custom ? rule.custom() : val(rule.field) !== '';
+    if (rule.box) setFieldInvalid(rule.box, !ok);
+    if (!ok) nvzToast(rule.msg);
+    return ok;
+  }
+
+  var currentStepId = 'cliente';
+
+  function visibleSteps(){ return STEP_DEFS.filter(function(s){ return !s.show || s.show(); }); }
+
+  function render(){
+    if (currentStepId === 'done') {
+      document.querySelectorAll('#nvz .step').forEach(function(el){ el.classList.remove('active'); });
+      document.querySelector('#nvz .step[data-step="done"]').classList.add('active');
+      document.getElementById('nvzTopbar').style.display = 'none';
+      document.getElementById('nvzBottombar').style.display = 'none';
+      window.scrollTo(0, 0);
+      return;
+    }
+    document.getElementById('nvzTopbar').style.display = '';
+    document.getElementById('nvzBottombar').style.display = '';
+
+    var vis = visibleSteps();
+    var idx = vis.findIndex(function(s){ return s.id === currentStepId; });
+    if (idx === -1) { idx = 0; currentStepId = vis[0].id; }
+
+    document.querySelectorAll('#nvz .step').forEach(function(el){ el.classList.remove('active'); });
+    document.querySelector('#nvz .step[data-step="' + currentStepId + '"]').classList.add('active');
+
+    document.getElementById('nvzProgressFill').style.width = ((idx + 1) / vis.length * 100) + '%';
+    document.getElementById('nvzProgressLabel').textContent = 'Paso ' + (idx + 1) + ' de ' + vis.length;
+    document.getElementById('nvzBtnBack').classList.toggle('hidden', idx === 0);
+
+    var btnNext = document.getElementById('nvzBtnNext');
+    btnNext.disabled = false;
+    btnNext.textContent = idx === vis.length - 1 ? 'Enviar visita \u2192' : 'Siguiente \u2192';
+
+    if (currentStepId === 'camgroups') ensureAtLeastOneGrupo();
+    if (currentStepId === 'resumen') renderResumen();
+
+    document.getElementById('nvzSteps').scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
+  function goNext(){
+    if (!validateStep(currentStepId)) return;
+    var vis = visibleSteps();
+    var idx = vis.findIndex(function(s){ return s.id === currentStepId; });
+    if (idx === vis.length - 1) { submitVisita(); return; }
+    currentStepId = vis[idx + 1].id;
+    render();
+  }
+  function goBack(){
+    var vis = visibleSteps();
+    var idx = vis.findIndex(function(s){ return s.id === currentStepId; });
+    if (idx <= 0) return;
+    currentStepId = vis[idx - 1].id;
+    render();
+  }
+
+  document.getElementById('nvzBtnNext').addEventListener('click', goNext);
+  document.getElementById('nvzBtnBack').addEventListener('click', goBack);
+
+  function setFechaHoy(){
+    var f = document.getElementById('nvz_fecha_visita');
+    if (f) {
+      var hoy = new Date();
+      var off = hoy.getTimezoneOffset();
+      f.value = new Date(hoy.getTime() - off * 60000).toISOString().slice(0, 10);
+    }
+  }
+
+  // ---- reset (cada vez que se abre "+ Nueva visita", ver mostrarWizardVisita
+  // en el script principal) ----
+  function resetWizard(){
+    document.querySelectorAll('#nvz input, #nvz textarea').forEach(function(el){
+      if (el.type === 'checkbox') { el.checked = el.defaultChecked; }
+      else { el.value = el.defaultValue; }
+    });
+    document.querySelectorAll('#nvz select').forEach(function(el){ el.selectedIndex = 0; });
+    document.getElementById('nvz_grupos_container').innerHTML = '';
+    grupoCamSeq = 0;
+    document.getElementById('nvz_alarma_conexion_wrap').style.display = 'none';
+    document.getElementById('nvz_alarma_cable_wrap').style.display = 'none';
+    document.getElementById('nvz_daisa_accesorios_row').style.display = 'none';
+    document.getElementById('nvzDetailPre').classList.remove('show');
+    document.getElementById('nvzBtnToggleDetail').textContent = 'Ver detalle tecnico completo \u25be';
+    document.getElementById('nvzStatusBanner').className = 'status-banner';
+    document.getElementById('nvzBtnCopyFallback').classList.remove('show');
+    setFechaHoy();
+    currentStepId = 'cliente';
+    render();
+  }
+  window.resetWizardVisita = resetWizard;
+
+  // Autocompleta nombre/direccion cuando se abre el wizard desde el boton
+  // "Agregar datos" de una cita del calendario de Otimify (ver
+  // cargarCitasCalendario en el script principal). Se llama DESPUES de
+  // resetWizard (mostrarWizardVisita ya lo hizo), asi que solo pisa esos dos
+  // campos puntuales.
+  function prellenarWizardVisita(nombre, direccion){
+    if (nombre) document.getElementById('nvz_cliente_nombre').value = nombre;
+    if (direccion) document.getElementById('nvz_cliente_direccion').value = direccion;
+  }
+  window.prellenarWizardVisita = prellenarWizardVisita;
+
+  setFechaHoy();
+  render();
+})();
+</script>
 </body>
 </html>
