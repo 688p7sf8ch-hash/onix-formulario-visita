@@ -72,6 +72,36 @@
     .topbar{padding-top:16px;}
   }
 
+  /* ---- Vista web ancha (>=1024px): aprovechar el ancho de pantalla en vez
+     de quedar como un celular centrado con margenes gigantes (pedido de
+     Antonella, 2026-08-29). En celular/tablet no cambia nada. ---- */
+  @media (min-width:1024px){
+    .app{max-width:1200px;border-radius:20px;}
+
+    /* Paneles de presupuestos -> grilla de tarjetas que llena el ancho */
+    .panel[data-panel="pendiente_aprobacion"].active,
+    .panel[data-panel="aprobado"].active,
+    .panel[data-panel="enviado"].active{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(440px,1fr));
+      gap:18px;
+      align-items:start;
+      padding:22px 22px calc(28px + var(--safe-bottom));
+    }
+    .panel.active > .empty{grid-column:1 / -1;}
+    .card{margin-bottom:0;}
+
+    /* Pestana Visitas: citas y visitas pendientes tambien en grilla */
+    .panel[data-panel="visitas"].active{padding:22px;}
+    #citasCalendarioWrap,#visitasListWrap{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:12px;
+    }
+    #citasCalendarioWrap > .empty,#visitasListWrap > .empty{grid-column:1 / -1;}
+    .cita-row,.visita-row{margin-bottom:0;}
+  }
+
   .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:calc(14px + var(--safe-top)) 18px 14px;box-shadow:var(--shadow-topbar);}
   .topbar h1{margin:0;font-size:17px;font-weight:800;letter-spacing:.2px;}
   .topbar p{margin:2px 0 0;font-size:12.5px;color:#aeb3d6;}
