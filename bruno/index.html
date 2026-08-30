@@ -1088,7 +1088,7 @@
     var resumen = p.resumen || { subtitulo: '', opciones: [] };
     var itemsPorOpcion = p.items || null;
     var opcionesHtml = (resumen.opciones || []).map(function(o, idx){
-      var itemsDeEstaOpcion = itemsPorOpcion ? (idx === 0 ? itemsPorOpcion.opcion1 : itemsPorOpcion.opcion2) : null;
+      var itemsDeEstaOpcion = itemsPorOpcion ? itemsPorOpcion['opcion' + (idx + 1)] : null;
       return '<div class="opcion">' +
         (o.nombre ? '<p class="nombre">' + escapeHtml(o.nombre) + '</p>' : '') +
         '<p class="cuerpo">' + escapeHtml(o.cuerpo || '') + '</p>' +
