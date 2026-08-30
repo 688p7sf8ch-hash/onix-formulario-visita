@@ -162,6 +162,14 @@
   .items-list .item-prov{display:block;font-size:10.8px;color:var(--muted);margin-top:1px;}
   .items-list .item-precio{white-space:nowrap;font-weight:700;color:var(--text);font-size:12.3px;}
 
+  /* ---- Desglose de costos interno de cada opcion (materiales + mano de obra
+     + viaticos + total) para que Bruno vea todo antes de aprobar ---- */
+  .desglose{margin:8px 0 4px;padding:8px 10px;background:var(--field-bg);border-radius:10px;font-size:12px;}
+  .desglose .dg-row{display:flex;justify-content:space-between;gap:8px;padding:2px 0;color:var(--muted);}
+  .desglose .dg-row.dg-total{margin-top:4px;padding-top:5px;border-top:1px solid var(--border);color:var(--navy);font-weight:800;font-size:13px;}
+  .desglose .dg-lbl{flex:1;min-width:0;}
+  .desglose .dg-val{white-space:nowrap;font-weight:700;}
+
   .btn-nueva-visita{
     width:100%;background:var(--orange);color:#fff;border:none;
     padding:13px;font-size:14px;font-weight:800;border-radius:12px;cursor:pointer;margin-bottom:14px;
@@ -1084,6 +1092,28 @@
     }).join('') + '</div>';
   }
 
+  // Desglose de costos interno de una opcion (materiales + mano de obra +
+  // viaticos + total). `d` = redaccion.opciones[i].desglose que manda el
+  // agente (ver desglose_para_bruno en generar-presupuesto.py). Opcional:
+  // presupuestos viejos sin desglose simplemente no lo muestran.
+  function renderDesglose(d){
+    if (!d) return '';
+    var m = d.moneda || 'USD';
+    function row(lbl, val, cls){
+      return '<div class="dg-row' + (cls || '') + '"><span class="dg-lbl">' + escapeHtml(lbl) +
+        '</span><span class="dg-val">' + escapeHtml(m + ' ' + val) + '</span></div>';
+    }
+    var out = '<div class="desglose">';
+    if (d.materiales_con_iva != null) out += row('Materiales (c/IVA)', d.materiales_con_iva);
+    if (d.mano_obra != null) out += row('Mano de obra' + (d.horas ? ' (' + d.horas + 'h x U$D 50)' : ''), d.mano_obra);
+    if (d.mano_obra_iva) out += row('IVA mano de obra', d.mano_obra_iva);
+    if (d.nafta) out += row('Nafta / viaticos', d.nafta);
+    if (d.comida) out += row('Comida', d.comida);
+    if (d.extras) out += row('Extras fijos', d.extras);
+    if (d.total != null) out += row('TOTAL', d.total, ' dg-total');
+    return out + '</div>';
+  }
+
   function renderCard(p, estado){
     var resumen = p.resumen || { subtitulo: '', opciones: [] };
     var itemsPorOpcion = p.items || null;
@@ -1093,6 +1123,7 @@
         (o.nombre ? '<p class="nombre">' + escapeHtml(o.nombre) + '</p>' : '') +
         '<p class="cuerpo">' + escapeHtml(o.cuerpo || '') + '</p>' +
         renderItemsList(itemsDeEstaOpcion) +
+        renderDesglose(o.desglose) +
         '<p class="precio">' + escapeHtml(o.precio || '') + '</p>' +
         '</div>';
     }).join('');
