@@ -926,6 +926,23 @@
       <div class="field">
         <textarea id="notas" placeholder="Lo que el cliente necesita/pidió, diferencia entre la opción económica y la mejor, contexto (local, robo previo, días de grabación), marcas o modelos puntuales, y cualquier detalle de la visita. Ej: local comercial, tuvo robo hace 3 meses, quiere ver desde el celu, cámaras de exterior a color. Económica HiLook 2MP / mejor Hikvision AcuSense 4MP."></textarea>
       </div>
+
+      <div class="panel-card" style="margin-top:18px">
+        <div class="panel-card-title">Para el presupuesto — lo elige Bruno</div>
+        <div class="field">
+          <label>¿Cuántas propuestas armar?</label>
+          <div class="check-grid">
+            <label class="check-pill"><input type="radio" name="prop_cant" id="prop_cant_auto" value="auto" checked><span>Que decida el agente</span></label>
+            <label class="check-pill"><input type="radio" name="prop_cant" value="1"><span>1</span></label>
+            <label class="check-pill"><input type="radio" name="prop_cant" value="2"><span>2</span></label>
+            <label class="check-pill"><input type="radio" name="prop_cant" value="3"><span>3</span></label>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label class="check-pill"><input type="checkbox" id="iva_mano_obra" checked><span>Agregar IVA (22%) a la mano de obra</span></label>
+          <span class="hint">El IVA sobre los materiales va siempre. Destildá solo si este presupuesto puntual va sin IVA en la mano de obra.</span>
+        </div>
+      </div>
     </section>
 
     <!-- RESUMEN -->
@@ -969,6 +986,8 @@
   function numVal(id){ const n = parseFloat(val(id)); return isNaN(n) ? 0 : n; }
   function numOrNull(id){ const v = val(id); if (v === '') return null; const n = parseFloat(v); return isNaN(n) ? null : n; }
   function chk(id){ const el = document.getElementById(id); return !!(el && el.checked); }
+  function radioVal(name){ const el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
+  function propuestasVal(){ const v = radioVal('prop_cant'); return (v === '1' || v === '2' || v === '3') ? parseInt(v, 10) : null; }
   function setFieldInvalid(fieldId, invalid){
     const el = document.getElementById(fieldId);
     if (el) el.classList.toggle('invalid', invalid);
@@ -1127,6 +1146,7 @@
         corrugados: numVal('daisa_corrugados')
       },
       logistica: { horas: horas, km: numVal('km'), comida: incluirComida, extras_usd: 100 },
+      presupuesto: { propuestas: propuestasVal(), iva_mano_obra: chk('iva_mano_obra') },
       notas: val('notas') || null
     };
   }
@@ -1287,6 +1307,10 @@
     const incluirComida = comidaVal === 'si' || (comidaVal === 'auto' && horas > 4);
     out += '¿Incluir comida ($500 UYU)?: ' + (incluirComida ? 'Sí' : 'No') + '\n';
     out += 'Extras fijos: USD 100 (siempre)\n\n';
+    out += '--- PREFERENCIAS DEL PRESUPUESTO (las define Bruno) ---\n';
+    out += 'Cantidad de propuestas: ' + (propuestasVal() ? propuestasVal() : 'a criterio del agente') + '\n';
+    out += 'IVA en la mano de obra: ' + (chk('iva_mano_obra') ? 'Sí (22%)' : 'NO — este presupuesto va sin IVA en mano de obra') + '\n';
+    out += 'IVA en materiales: Sí (siempre)\n\n';
     if (val('notas')) out += '--- NOTAS ---\n' + val('notas') + '\n\n';
     out += '=== FIN DE DATOS ===\n\n';
     out += 'INSTRUCCIÓN: Con estos datos, seguí el flujo del agente de presupuestos de Onix System (CLAUDE.md).';
@@ -1315,6 +1339,11 @@
 
     html += '<div class="summary-block"><h4>Mano de obra y logística</h4>' +
       '<p>' + (val('horas') || '0') + ' h de trabajo · ' + (val('km') || '0') + ' km desde el taller</p>' +
+      '</div>';
+
+    html += '<div class="summary-block"><h4>Presupuesto</h4>' +
+      '<p>Propuestas: ' + (propuestasVal() ? propuestasVal() : 'a criterio del agente') + '</p>' +
+      '<p>IVA en mano de obra: ' + (chk('iva_mano_obra') ? 'Sí' : 'No') + ' · IVA en materiales: Sí</p>' +
       '</div>';
 
     if (val('notas')) {

@@ -909,6 +909,23 @@
         <div class="field">
           <textarea id="nvz_notas" placeholder="Lo que el cliente necesita/pidio, diferencia entre la opcion economica y la mejor, contexto (local, robo previo, dias de grabacion), marcas o modelos puntuales, y cualquier detalle de la visita."></textarea>
         </div>
+
+        <div class="panel-card" style="margin-top:18px">
+          <div class="panel-card-title">Para el presupuesto &mdash; lo eleg&iacute;s vos</div>
+          <div class="field">
+            <label>&iquest;Cu&aacute;ntas propuestas armar?</label>
+            <div class="check-grid">
+              <label class="check-pill"><input type="radio" name="nvz_prop_cant" id="nvz_prop_cant_auto" value="auto" checked><span>Que decida el agente</span></label>
+              <label class="check-pill"><input type="radio" name="nvz_prop_cant" value="1"><span>1</span></label>
+              <label class="check-pill"><input type="radio" name="nvz_prop_cant" value="2"><span>2</span></label>
+              <label class="check-pill"><input type="radio" name="nvz_prop_cant" value="3"><span>3</span></label>
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label class="check-pill"><input type="checkbox" id="nvz_iva_mano_obra" checked><span>Agregar IVA (22%) a la mano de obra</span></label>
+            <span class="hint">El IVA sobre los materiales va siempre. Destild&aacute; solo si este presupuesto puntual va sin IVA en la mano de obra.</span>
+          </div>
+        </div>
       </section>
 
       <!-- RESUMEN -->
@@ -1247,6 +1264,8 @@
   function numVal(id){ var n = parseFloat(val(id)); return isNaN(n) ? 0 : n; }
   function numOrNull(id){ var v = val(id); if (v === '') return null; var n = parseFloat(v); return isNaN(n) ? null : n; }
   function chk(id){ var el = document.getElementById(id); return !!(el && el.checked); }
+  function radioVal(name){ var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
+  function propuestasVal(){ var v = radioVal('nvz_prop_cant'); return (v === '1' || v === '2' || v === '3') ? parseInt(v, 10) : null; }
   function setFieldInvalid(fieldId, invalid){
     var el = document.getElementById(fieldId);
     if (el) el.classList.toggle('invalid', invalid);
@@ -1405,6 +1424,7 @@
         corrugados: numVal('nvz_daisa_corrugados')
       },
       logistica: { horas: horas, km: numVal('nvz_km'), comida: incluirComida, extras_usd: 100 },
+      presupuesto: { propuestas: propuestasVal(), iva_mano_obra: chk('nvz_iva_mano_obra') },
       notas: val('nvz_notas') || null
     };
   }
@@ -1565,6 +1585,10 @@
     var incluirComida2 = comidaVal2 === 'si' || (comidaVal2 === 'auto' && horas2 > 4);
     out += 'Incluir comida ($500 UYU)?: ' + (incluirComida2 ? 'Si' : 'No') + '\n';
     out += 'Extras fijos: USD 100 (siempre)\n\n';
+    out += '--- PREFERENCIAS DEL PRESUPUESTO (las define Bruno) ---\n';
+    out += 'Cantidad de propuestas: ' + (propuestasVal() ? propuestasVal() : 'a criterio del agente') + '\n';
+    out += 'IVA en la mano de obra: ' + (chk('nvz_iva_mano_obra') ? 'Si (22%)' : 'NO - este presupuesto va sin IVA en mano de obra') + '\n';
+    out += 'IVA en materiales: Si (siempre)\n\n';
     if (val('nvz_notas')) out += '--- NOTAS ---\n' + val('nvz_notas') + '\n\n';
     out += '=== FIN DE DATOS ===\n\n';
     out += 'INSTRUCCION: Con estos datos, seguir el flujo del agente de presupuestos de Onix System (CLAUDE.md).';
@@ -1593,6 +1617,11 @@
 
     html += '<div class="summary-block"><h4>Mano de obra y logistica</h4>' +
       '<p>' + (val('nvz_horas') || '0') + ' h de trabajo - ' + (val('nvz_km') || '0') + ' km desde el taller</p>' +
+      '</div>';
+
+    html += '<div class="summary-block"><h4>Presupuesto</h4>' +
+      '<p>Propuestas: ' + (propuestasVal() ? propuestasVal() : 'a criterio del agente') + '</p>' +
+      '<p>IVA en mano de obra: ' + (chk('nvz_iva_mano_obra') ? 'Si' : 'No') + ' - IVA en materiales: Si</p>' +
       '</div>';
 
     if (val('nvz_notas')) {
@@ -1768,7 +1797,7 @@
   // en el script principal) ----
   function resetWizard(){
     document.querySelectorAll('#nvz input, #nvz textarea').forEach(function(el){
-      if (el.type === 'checkbox') { el.checked = el.defaultChecked; }
+      if (el.type === 'checkbox' || el.type === 'radio') { el.checked = el.defaultChecked; }
       else { el.value = el.defaultValue; }
     });
     document.querySelectorAll('#nvz select').forEach(function(el){ el.selectedIndex = 0; });
