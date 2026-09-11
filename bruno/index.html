@@ -89,6 +89,8 @@
       padding:22px 22px calc(28px + var(--safe-bottom));
     }
     .panel.active > .empty{grid-column:1 / -1;}
+    .panel.active > .search-box{grid-column:1 / -1;}
+    .panel.active > .card-list > .empty{grid-column:1 / -1;}
     .card{margin-bottom:0;}
 
     /* Pestana Visitas: citas y visitas pendientes tambien en grilla */
@@ -117,7 +119,25 @@
 
   .empty{color:var(--muted);text-align:center;padding:40px 16px;font-size:14px;}
 
+  /* .card-list envuelve las tarjetas para poder actualizarlas sin tocar el
+     buscador (ver renderList) sin romper la grilla de escritorio de arriba:
+     display:contents hace que sus hijos (.card) se comporten como si fueran
+     hijos directos de .panel a efectos de layout. */
+  .card-list{display:contents;}
+
+  .search-box{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:15px;font-family:inherit;color:var(--text);margin-bottom:14px;box-shadow:var(--ring-light), var(--shadow-card-sm);}
+  .search-box:focus{outline:none;border-color:var(--green);}
+  .search-box::-webkit-search-cancel-button{cursor:pointer;}
+
   .card{background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--ring-light), var(--shadow-card);}
+  .card-header{cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .card-header-main{min-width:0;flex:1;}
+  .card-header-side{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-top:1px;}
+  .card .resumen-precio{font-size:13px;font-weight:800;color:var(--navy);margin:0;}
+  .card .chev{display:inline-block;font-size:11px;color:var(--muted);transition:transform .18s ease;}
+  .card.expanded .chev{transform:rotate(180deg);}
+  .card-body{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);}
+  .card.expanded .card-body{display:block;}
   .card .cliente{font-weight:800;font-size:15px;margin:0 0 2px;}
   .card .fecha{font-size:12px;color:var(--muted);margin:0 0 10px;}
   .card .subtitulo{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin:0 0 8px;}
@@ -139,6 +159,7 @@
   .btn:disabled{background:#a9adb3;color:#fff;cursor:not-allowed;box-shadow:none;}
 
   .estado-chip{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;margin-bottom:8px;}
+  .card-header-side .estado-chip{margin-bottom:0;}
   .estado-generando{background:#fff3cd;color:#8a6300;}
   .estado-listo{background:var(--ok-bg);color:var(--ok);}
 
@@ -1000,6 +1021,16 @@
   var currentTab = 'pendiente_aprobacion';
   var pollTimer = null;
 
+  // Tarjetas colapsadas por default (2026-09-11, pedido de Antonella): cada
+  // panel de presupuestos guarda sus items ya traidos (presupuestosCache),
+  // el texto del buscador (searchQuery) y que tarjetas estan desplegadas
+  // (expandedIds, por id) - asi un refresh (poll de "aprobado" cada 15s, o
+  // recargar tras aprobar/rechazar) no pierde lo que el usuario tenia
+  // abierto o escrito en el buscador. Ver renderPanel/renderList mas abajo.
+  var presupuestosCache = { pendiente_aprobacion: [], aprobado: [], enviado: [] };
+  var searchQuery = { pendiente_aprobacion: '', aprobado: '', enviado: '' };
+  var expandedIds = { pendiente_aprobacion: {}, aprobado: {}, enviado: {} };
+
   function setTab(tab){
     currentTab = tab;
     document.querySelectorAll('.tab').forEach(function(el){ el.classList.toggle('active', el.dataset.tab === tab); });
@@ -1066,14 +1097,12 @@
 
   function cargarPresupuestos(estado){
     apiGet({ presupuestos: 1, estado: estado }).then(function(res){
-        var panel = document.querySelector('.panel[data-panel="' + estado + '"]');
         var items = (res && res.presupuestos) || [];
+        presupuestosCache[estado] = items;
         if (estado === 'pendiente_aprobacion') document.getElementById('n-pendiente_aprobacion').textContent = items.length;
         if (estado === 'aprobado') document.getElementById('n-aprobado').textContent = items.length;
 
-        if (!items.length) { panel.innerHTML = '<div class="empty">No hay nada ac&aacute;.</div>'; return; }
-        panel.innerHTML = items.map(function(p){ return renderCard(p, estado); }).join('');
-        bindCardEvents(panel);
+        renderPanel(estado);
 
         if (estado === 'aprobado' && items.some(function(p){ return !p.pdf_url; })) {
           if (!pollTimer) pollTimer = setInterval(function(){ if (currentTab === 'aprobado') cargarPresupuestos('aprobado'); }, 15000);
@@ -1083,6 +1112,60 @@
     }).catch(function(){
       document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">No se pudo cargar.</div>';
     });
+  }
+
+  // Busca por cliente, subtitulo, texto de cada opcion y nombre de cada
+  // producto cotizado - asi sirve tanto para encontrar el presupuesto de un
+  // cliente como para ubicar uno que llevaba, por ejemplo, cierto modelo.
+  function filtrarPresupuestos(estado){
+    var q = (searchQuery[estado] || '').toLowerCase().trim();
+    var items = presupuestosCache[estado] || [];
+    if (!q) return items;
+    return items.filter(function(p){
+      var partes = [p.cliente || '', (p.resumen && p.resumen.subtitulo) || ''];
+      ((p.resumen && p.resumen.opciones) || []).forEach(function(o){ partes.push(o.nombre || '', o.cuerpo || ''); });
+      if (p.items) {
+        Object.keys(p.items).forEach(function(k){
+          (p.items[k] || []).forEach(function(it){ partes.push(it.nombre || ''); });
+        });
+      }
+      return partes.join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  // Arma (una sola vez por panel) el buscador + el contenedor de tarjetas.
+  // En refrescos posteriores (poll de "aprobado", recargar tras aprobar/
+  // rechazar) reusa el input existente para no perder el foco/cursor de lo
+  // que el usuario esta escribiendo - solo renderList() se vuelve a correr.
+  function renderPanel(estado){
+    var panel = document.querySelector('.panel[data-panel="' + estado + '"]');
+    if (!(presupuestosCache[estado] || []).length) {
+      panel.innerHTML = '<div class="empty">No hay nada ac&aacute;.</div>';
+      return;
+    }
+    if (!panel.querySelector('.search-box')) {
+      panel.innerHTML = '<input type="search" class="search-box" placeholder="Buscar por cliente, producto..." autocomplete="off">' +
+        '<div class="card-list"></div>';
+      panel.querySelector('.search-box').addEventListener('input', function(){
+        searchQuery[estado] = this.value;
+        renderList(estado);
+      });
+    }
+    renderList(estado);
+  }
+
+  function renderList(estado){
+    var panel = document.querySelector('.panel[data-panel="' + estado + '"]');
+    var listEl = panel.querySelector('.card-list');
+    if (!listEl) return;
+    var filtrados = filtrarPresupuestos(estado);
+    if (!filtrados.length) {
+      var q = searchQuery[estado];
+      listEl.innerHTML = '<div class="empty">Sin resultados' + (q ? ' para "' + escapeHtml(q) + '"' : '') + '.</div>';
+      return;
+    }
+    listEl.innerHTML = filtrados.map(function(p){ return renderCard(p, estado); }).join('');
+    bindCardEvents(listEl, estado);
   }
 
   // Lista de items con link a cada producto, dentro de una opcion - para que
@@ -1133,8 +1216,9 @@
 
   function renderCard(p, estado){
     var resumen = p.resumen || { subtitulo: '', opciones: [] };
+    var opciones = resumen.opciones || [];
     var itemsPorOpcion = p.items || null;
-    var opcionesHtml = (resumen.opciones || []).map(function(o, idx){
+    var opcionesHtml = opciones.map(function(o, idx){
       var itemsDeEstaOpcion = itemsPorOpcion ? itemsPorOpcion['opcion' + (idx + 1)] : null;
       return '<div class="opcion">' +
         (o.nombre ? '<p class="nombre">' + escapeHtml(o.nombre) + '</p>' : '') +
@@ -1150,6 +1234,7 @@
     }).join('');
 
     var acciones = '';
+    var chipHtml = '';
     if (estado === 'pendiente_aprobacion') {
       acciones =
         '<textarea class="comentario-input" placeholder="Comentario (opcional para aprobar, obligatorio para rechazar)"></textarea>' +
@@ -1159,27 +1244,52 @@
         '</div>';
     } else if (estado === 'aprobado') {
       if (p.pdf_url) {
+        chipHtml = '<span class="estado-chip estado-listo">PDF listo</span>';
         acciones =
-          '<span class="estado-chip estado-listo">PDF listo</span>' +
           '<a class="btn-descargar" href="' + p.pdf_url + '" target="_blank" rel="noopener">Descargar PDF</a>' +
           '<div class="row"><button class="btn btn-enviado" data-accion="marcar_enviado" data-id="' + p.id + '">Marcar enviado</button></div>';
       } else {
-        acciones = '<span class="estado-chip estado-generando">Generando PDF&hellip;</span>';
+        chipHtml = '<span class="estado-chip estado-generando">Generando PDF&hellip;</span>';
       }
     }
 
-    return '<div class="card">' +
-      '<p class="cliente">' + escapeHtml(p.cliente || 'Sin nombre') + '</p>' +
-      '<p class="fecha">' + fechaCorta(p.fecha_creado) + '</p>' +
-      (resumen.subtitulo ? '<p class="subtitulo">' + escapeHtml(resumen.subtitulo) + '</p>' : '') +
-      opcionesHtml +
-      (comentariosHtml ? '<div class="comentarios">' + comentariosHtml + '</div>' : '') +
+    // Primera linea de precio de cada opcion, para poder identificar la
+    // tarjeta sin tener que desplegarla (ver PASO de "tarjetas colapsadas").
+    var resumenPrecios = opciones.map(function(o){
+      return (o.precio || '').split('\n')[0].trim();
+    }).filter(Boolean).map(escapeHtml).join(' &middot; ');
+
+    var expanded = !!(expandedIds[estado] && expandedIds[estado][p.id]);
+
+    return '<div class="card' + (expanded ? ' expanded' : '') + '" data-id="' + escapeHtml(String(p.id)) + '">' +
+      '<div class="card-header">' +
+        '<div class="card-header-main">' +
+          '<p class="cliente">' + escapeHtml(p.cliente || 'Sin nombre') + '</p>' +
+          '<p class="fecha">' + fechaCorta(p.fecha_creado) + '</p>' +
+          (resumen.subtitulo ? '<p class="subtitulo">' + escapeHtml(resumen.subtitulo) + '</p>' : '') +
+          (resumenPrecios ? '<p class="resumen-precio">' + resumenPrecios + '</p>' : '') +
+        '</div>' +
+        '<div class="card-header-side">' + chipHtml + '<span class="chev">&#9662;</span></div>' +
+      '</div>' +
+      '<div class="card-body">' +
+        opcionesHtml +
+        (comentariosHtml ? '<div class="comentarios">' + comentariosHtml + '</div>' : '') +
+      '</div>' +
       acciones +
       '</div>';
   }
 
-  function bindCardEvents(panel){
-    panel.querySelectorAll('button[data-accion]').forEach(function(btn){
+  function bindCardEvents(container, estado){
+    container.querySelectorAll('.card-header').forEach(function(header){
+      header.addEventListener('click', function(){
+        var card = header.closest('.card');
+        var id = card.dataset.id;
+        var nowExpanded = card.classList.toggle('expanded');
+        if (!expandedIds[estado]) expandedIds[estado] = {};
+        expandedIds[estado][id] = nowExpanded;
+      });
+    });
+    container.querySelectorAll('button[data-accion]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var accion = btn.dataset.accion;
         var id = btn.dataset.id;
