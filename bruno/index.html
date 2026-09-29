@@ -1083,10 +1083,32 @@
     });
   }
 
+  // Cache en localStorage: al abrir la app o cambiar de pestana se muestra al
+  // instante lo ultimo que se vio y se refresca en segundo plano (el backend
+  // Apps Script tarda varios segundos en responder).
+  function cacheLeer(estado){
+    try { var r = localStorage.getItem('bruno_cache_' + estado); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+  }
+  function cacheGuardar(estado, items){
+    try { localStorage.setItem('bruno_cache_' + estado, JSON.stringify(items)); } catch (e) {}
+  }
+  function actualizarContadores(){
+    ['pendiente_aprobacion', 'aprobado'].forEach(function(e){
+      var n = document.getElementById('n-' + e);
+      if (n && presupuestosCache[e]) n.textContent = presupuestosCache[e].length;
+    });
+  }
+
   function cargarPresupuestos(estado){
-    apiGet({ presupuestos: 1, estado: estado }).then(function(res){
+    if (!presupuestosCache[estado].length) {
+      var viejo = cacheLeer(estado);
+      if (viejo && viejo.length) { presupuestosCache[estado] = viejo; actualizarContadores(); renderPanel(estado); }
+      else { document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">Cargando&hellip;</div>'; }
+    }
+    return apiGet({ presupuestos: 1, estado: estado }).then(function(res){
         var items = (res && res.presupuestos) || [];
         presupuestosCache[estado] = items;
+        cacheGuardar(estado, items);
         if (estado === 'pendiente_aprobacion') document.getElementById('n-pendiente_aprobacion').textContent = items.length;
         if (estado === 'aprobado') document.getElementById('n-aprobado').textContent = items.length;
 
@@ -1098,7 +1120,7 @@
           clearInterval(pollTimer); pollTimer = null;
         }
     }).catch(function(){
-      document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">No se pudo cargar.</div>';
+      if (!presupuestosCache[estado].length) document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">No se pudo cargar.</div>';
     });
   }
 
@@ -1202,7 +1224,7 @@
     return out + '</div>';
   }
 
-  function renderCard(p, estado){
+  function cuerpoTarjeta(p){
     var resumen = p.resumen || { subtitulo: '', opciones: [] };
     var opciones = resumen.opciones || [];
     var itemsPorOpcion = p.items || null;
@@ -1216,10 +1238,15 @@
         '<p class="precio">' + escapeHtml(o.precio || '') + '</p>' +
         '</div>';
     }).join('');
-
     var comentariosHtml = (p.comentarios || []).map(function(c){
       return '<div class="comentario"><span class="autor">' + escapeHtml(c.autor) + '</span> \u00b7 ' + fechaCorta(c.fecha) + '<br>' + escapeHtml(c.texto) + '</div>';
     }).join('');
+    return opcionesHtml + (comentariosHtml ? '<div class="comentarios">' + comentariosHtml + '</div>' : '');
+  }
+
+  function renderCard(p, estado){
+    var resumen = p.resumen || { subtitulo: '', opciones: [] };
+    var opciones = resumen.opciones || [];
 
     var acciones = '';
     var chipHtml = '';
@@ -1261,10 +1288,7 @@
         '</div>' +
         '<div class="card-header-side">' + chipHtml + '<span class="chev">&#9662;</span></div>' +
       '</div>' +
-      '<div class="card-body">' +
-        opcionesHtml +
-        (comentariosHtml ? '<div class="comentarios">' + comentariosHtml + '</div>' : '') +
-      '</div>' +
+      '<div class="card-body">' + (expanded ? cuerpoTarjeta(p) : '') + '</div>' +
       acciones +
       '</div>';
   }
@@ -1275,6 +1299,11 @@
         var card = header.closest('.card');
         var id = card.dataset.id;
         var nowExpanded = card.classList.toggle('expanded');
+        var bodyEl = card.querySelector('.card-body');
+        if (nowExpanded && bodyEl && !bodyEl.firstChild) {
+          var pr = (presupuestosCache[estado] || []).filter(function(x){ return String(x.id) === id; })[0];
+          if (pr) bodyEl.innerHTML = cuerpoTarjeta(pr);
+        }
         if (!expandedIds[estado]) expandedIds[estado] = {};
         expandedIds[estado][id] = nowExpanded;
       });
@@ -1295,12 +1324,20 @@
         if (accion === 'eliminar' && !confirm('Eliminar este presupuesto? No se puede deshacer.')) return;
 
         btn.disabled = true;
+        var quitar = (accion === 'eliminar' || accion === 'aprobar' || accion === 'rechazar' || accion === 'marcar_enviado');
+        if (quitar) {
+          // Optimista: la tarjeta sale al instante; si el backend falla, se recarga.
+          presupuestosCache[estado] = presupuestosCache[estado].filter(function(x){ return String(x.id) !== id; });
+          cacheGuardar(estado, presupuestosCache[estado]);
+          actualizarContadores();
+          renderPanel(estado);
+        }
         apiGet({ accion: accion, id: id, comentario: comentario, autor: 'Bruno' })
           .then(function(res){
             if (res && res.ok) { cargar(currentTab); }
-            else { btn.disabled = false; alert('No se pudo: ' + ((res && res.error) || 'error desconocido')); }
+            else { btn.disabled = false; alert('No se pudo: ' + ((res && res.error) || 'error desconocido')); if (quitar) cargar(currentTab); }
           })
-          .catch(function(){ btn.disabled = false; alert('No se pudo conectar. Proba de nuevo.'); });
+          .catch(function(){ btn.disabled = false; alert('No se pudo conectar. Proba de nuevo.'); if (quitar) cargar(currentTab); });
       });
     });
   }
@@ -1337,6 +1374,8 @@
   document.getElementById('btnNuevaVisitaShow').addEventListener('click', mostrarWizardVisita);
 
   setTab('pendiente_aprobacion');
+  // Precarga en segundo plano: contadores y la pestana Aprobado listos antes de tocarla.
+  (function(){ var c = cacheLeer('aprobado'); if (c) { presupuestosCache.aprobado = c; } actualizarContadores(); setTimeout(function(){ cargarPresupuestos('aprobado'); }, 1200); })();
 </script>
 
 <script>
