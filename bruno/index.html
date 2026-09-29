@@ -1230,7 +1230,7 @@
           '<button class="btn btn-aprobar" data-accion="aprobar" data-id="' + p.id + '">Aprobar</button>' +
           '<button class="btn btn-rechazar" data-accion="rechazar" data-id="' + p.id + '">Rechazar / comentar</button>' +
         '</div>' +
-        '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar (duplicado)</button></div>';
+        '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar</button></div>';
     } else if (estado === 'aprobado') {
       if (p.pdf_url) {
         chipHtml = '<span class="estado-chip estado-listo">PDF listo</span>';
@@ -1240,7 +1240,7 @@
       } else {
         chipHtml = '<span class="estado-chip estado-generando">Generando PDF&hellip;</span>';
       }
-      acciones += '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar (no contestaron / duplicado)</button></div>';
+      acciones += '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar</button></div>';
     }
 
     // Primera linea de precio de cada opcion, para poder identificar la
