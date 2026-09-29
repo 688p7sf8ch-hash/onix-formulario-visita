@@ -154,6 +154,7 @@
   .btn{flex:1;border:none;border-radius:12px;padding:12px 10px;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-btn);transition:transform .12s ease;}
   .btn:active{transform:scale(.97);}
   .btn-aprobar{background:var(--ok);color:#fff;box-shadow:0 10px 22px -8px rgba(14,122,79,.5);}
+  .btn-eliminar{background:transparent;color:var(--muted,#6b7280);border:1px dashed currentColor;box-shadow:none;font-size:.85em;}
   .btn-rechazar{background:var(--danger-bg);color:var(--danger);box-shadow:none;}
   .btn-enviado{background:var(--orange);color:#fff;box-shadow:0 10px 22px -8px rgba(242,81,22,.5);}
   .btn:disabled{background:#a9adb3;color:#fff;cursor:not-allowed;box-shadow:none;}
@@ -660,19 +661,6 @@
             <select id="nvz_analog_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
           </div>
         </div>
-      </section>
-
-      <!-- GRUPOS DE CAMARAS -->
-      <section class="step" data-step="camgroups">
-        <div class="step-eyebrow">Requisitos de c&aacute;maras</div>
-        <div class="step-title">Agrup&aacute; las c&aacute;maras por lo que necesitan</div>
-        <div class="helper-box">
-          Ej: <b>2 con reconocimiento facial</b> + <b>4 comunes</b>. Se cotiza cada grupo con la c&aacute;mara m&aacute;s
-          barata que cumpla, as&iacute; lo caro (facial, patentes, 4K...) se paga <b>solo donde hace falta</b>.
-          Tild&aacute; &uacute;nicamente lo que ese grupo necesita.
-        </div>
-        <div id="nvz_grupos_container"></div>
-        <button type="button" class="btn-add-dashed" id="nvzBtnAddGrupo">+ Agregar grupo de c&aacute;maras</button>
       </section>
 
       <!-- VIDEOPORTERIA -->
@@ -1241,7 +1229,8 @@
         '<div class="row">' +
           '<button class="btn btn-aprobar" data-accion="aprobar" data-id="' + p.id + '">Aprobar</button>' +
           '<button class="btn btn-rechazar" data-accion="rechazar" data-id="' + p.id + '">Rechazar / comentar</button>' +
-        '</div>';
+        '</div>' +
+        '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar (duplicado)</button></div>';
     } else if (estado === 'aprobado') {
       if (p.pdf_url) {
         chipHtml = '<span class="estado-chip estado-listo">PDF listo</span>';
@@ -1301,6 +1290,8 @@
           alert('Para rechazar, deja un comentario explicando por que.');
           return;
         }
+
+        if (accion === 'eliminar' && !confirm('Eliminar este presupuesto (duplicado)? No se puede deshacer.')) return;
 
         btn.disabled = true;
         apiGet({ accion: accion, id: id, comentario: comentario, autor: 'Bruno' })
@@ -1398,40 +1389,6 @@
     nvzToastTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2400);
   }
 
-  // ---- grupos de camaras ----
-  var grupoCamSeq = 0;
-  function agregarGrupoCamara(){
-    grupoCamSeq++;
-    var cont = document.getElementById('nvz_grupos_container');
-    var div = document.createElement('div');
-    div.className = 'group-card';
-    div.innerHTML =
-      '<div class="group-card-head"><strong>Grupo ' + grupoCamSeq + '</strong>' +
-      '<button type="button" class="btn-remove" data-remove-grupo>\u2715 quitar</button></div>' +
-      '<div class="field"><label>Cantidad de camaras</label><input type="number" class="g-cantidad" min="1" inputmode="numeric" placeholder="Ej: 2"></div>' +
-      '<div class="grid2">' +
-        '<div class="field"><label>Resolucion minima</label><select class="g-resolucion"><option value="">Sin preferencia</option><option value="2MP">2 MP</option><option value="4MP">4 MP</option><option value="5MP">5 MP</option><option value="8MP">8 MP (4K)</option></select></div>' +
-        '<div class="field"><label>Vision nocturna (m)</label><input type="number" class="g-ir" min="0" inputmode="numeric" placeholder="Ej: 30"></div>' +
-      '</div>' +
-      '<div class="field"><label>Este grupo necesita</label>' +
-        '<div class="check-grid">' +
-          '<label class="check-pill"><input type="checkbox" class="g-audio"><span>Audio</span></label>' +
-          '<label class="check-pill"><input type="checkbox" class="g-exterior"><span>Exterior (IP66+)</span></label>' +
-          '<label class="check-pill"><input type="checkbox" class="g-color"><span>Color nocturno</span></label>' +
-          '<label class="check-pill"><input type="checkbox" class="g-ia"><span>IA / AcuSense</span></label>' +
-          '<label class="check-pill"><input type="checkbox" class="g-facial"><span>Facial</span></label>' +
-          '<label class="check-pill"><input type="checkbox" class="g-lpr"><span>Lectura de patentes</span></label>' +
-        '</div>' +
-      '</div>' +
-      '<div class="field"><label>Area / distancia a cubrir (opcional)</label><input type="text" class="g-area" placeholder="Ej: porton a 15m, pasillo 8m"></div>';
-    cont.appendChild(div);
-    div.querySelector('[data-remove-grupo]').addEventListener('click', function(){ div.remove(); });
-  }
-  document.getElementById('nvzBtnAddGrupo').addEventListener('click', agregarGrupoCamara);
-  function ensureAtLeastOneGrupo(){
-    if (document.querySelectorAll('#nvz_grupos_container .group-card').length === 0) agregarGrupoCamara();
-  }
-
   // ---- alarma conditionals ----
   document.getElementById('nvz_alarma_marca').addEventListener('change', function(){
     var marca = this.value;
@@ -1511,23 +1468,7 @@
         marca: val('nvz_ctrlacceso_marca') || null, cable: numVal('nvz_ctrlacceso_cable'),
         obs: val('nvz_ctrlacceso_obs') || null, ups: val('nvz_ctrlacceso_ups')
       },
-      grupos_camaras: !(chk('nvz_tipo_wifi') || chk('nvz_tipo_ip') || chk('nvz_tipo_analog')) ? null :
-        Array.from(document.querySelectorAll('#nvz_grupos_container .group-card')).map(function(g){
-          var q = g.querySelector('.g-cantidad').value;
-          var ir = g.querySelector('.g-ir').value;
-          return {
-            cantidad: q ? parseInt(q, 10) : 0,
-            resolucion_min: g.querySelector('.g-resolucion').value || null,
-            ir_m: ir ? parseInt(ir, 10) : null,
-            audio: g.querySelector('.g-audio').checked,
-            exterior: g.querySelector('.g-exterior').checked,
-            color_noct: g.querySelector('.g-color').checked,
-            ia: g.querySelector('.g-ia').checked,
-            facial: g.querySelector('.g-facial').checked,
-            lpr: g.querySelector('.g-lpr').checked,
-            area: g.querySelector('.g-area').value.trim() || null
-          };
-        }).filter(function(x){ return x.cantidad > 0; }),
+      grupos_camaras: null,
       daisa: {
         metros: numVal('nvz_daisa_metros'), ducto_metros: numVal('nvz_ducto_metros'), gabinete: val('nvz_gabinete'),
         codos: numVal('nvz_daisa_codos'), grampas: numVal('nvz_daisa_grampas'), uniones: numVal('nvz_daisa_uniones'),
@@ -1653,28 +1594,6 @@
       out += 'Metros de cable: ' + (val('nvz_ctrlacceso_cable') || '0') + '\n';
       if (val('nvz_ctrlacceso_obs')) out += 'Observaciones: ' + val('nvz_ctrlacceso_obs') + '\n';
       out += 'UPS: ' + val('nvz_ctrlacceso_ups') + '\n\n';
-    }
-    if (chk('nvz_tipo_wifi') || chk('nvz_tipo_ip') || chk('nvz_tipo_analog')) {
-      var grupos = Array.from(document.querySelectorAll('#nvz_grupos_container .group-card')).map(function(g){
-        var q = parseInt(g.querySelector('.g-cantidad').value, 10) || 0;
-        if (!q) return null;
-        var feats = [];
-        if (g.querySelector('.g-resolucion').value) feats.push(g.querySelector('.g-resolucion').value);
-        if (g.querySelector('.g-ir').value) feats.push('IR ' + g.querySelector('.g-ir').value + 'm');
-        if (g.querySelector('.g-audio').checked) feats.push('audio');
-        if (g.querySelector('.g-exterior').checked) feats.push('exterior IP66+');
-        if (g.querySelector('.g-color').checked) feats.push('color nocturno');
-        if (g.querySelector('.g-ia').checked) feats.push('IA/AcuSense');
-        if (g.querySelector('.g-facial').checked) feats.push('reconocimiento facial');
-        if (g.querySelector('.g-lpr').checked) feats.push('lectura de patentes');
-        var area = g.querySelector('.g-area').value.trim();
-        return q + ' camara(s): ' + (feats.length ? feats.join(', ') : 'basicas') + (area ? ' - ' + area : '');
-      }).filter(Boolean);
-      if (grupos.length) {
-        out += '--- REQUISITOS DE CAMARAS POR GRUPOS (cotizar cada grupo con la mas barata que cumpla) ---\n';
-        grupos.forEach(function(r, i){ out += 'Grupo ' + (i + 1) + ': ' + r + '\n'; });
-        out += '\n';
-      }
     }
     out += '--- CABLEADO Y DAISA ---\n';
     out += 'Metros de cano daisa (Fivisa): ' + val('nvz_daisa_metros') + '\n';
@@ -1805,7 +1724,6 @@
     { id: 'wifi', show: function(){ return chk('nvz_tipo_wifi'); } },
     { id: 'ip', show: function(){ return chk('nvz_tipo_ip'); } },
     { id: 'analog', show: function(){ return chk('nvz_tipo_analog'); } },
-    { id: 'camgroups', show: function(){ return chk('nvz_tipo_wifi') || chk('nvz_tipo_ip') || chk('nvz_tipo_analog'); } },
     { id: 'video', show: function(){ return chk('nvz_tipo_video'); } },
     { id: 'alarma', show: function(){ return chk('nvz_tipo_alarma'); } },
     { id: 'portero2h', show: function(){ return chk('nvz_tipo_portero2h'); } },
@@ -1818,7 +1736,7 @@
 
   var REQUIRED_FIELD = {
     cliente: { field: 'nvz_cliente_nombre', box: 'nvz_f_cliente_nombre', msg: 'Completa el nombre del cliente' },
-    sistemas: { custom: function(){ return STEP_DEFS.slice(2, 10).some(function(s){ return s.show && s.show(); }) || Object.keys(NOMBRE_SISTEMA_CHIP).some(chk); }, msg: 'Selecciona al menos un tipo de sistema' },
+    sistemas: { custom: function(){ return STEP_DEFS.slice(2, 9).some(function(s){ return s.show && s.show(); }) || Object.keys(NOMBRE_SISTEMA_CHIP).some(chk); }, msg: 'Selecciona al menos un tipo de sistema' },
     wifi: { field: 'nvz_wifi_camaras', box: 'nvz_f_wifi_camaras', msg: 'Completa la cantidad de camaras' },
     ip: { field: 'nvz_ip_camaras', box: 'nvz_f_ip_camaras', msg: 'Completa la cantidad de camaras' },
     analog: { field: 'nvz_analog_camaras', box: 'nvz_f_analog_camaras', msg: 'Completa la cantidad de camaras' },
@@ -1868,7 +1786,6 @@
     btnNext.disabled = false;
     btnNext.textContent = idx === vis.length - 1 ? 'Enviar visita \u2192' : 'Siguiente \u2192';
 
-    if (currentStepId === 'camgroups') ensureAtLeastOneGrupo();
     if (currentStepId === 'resumen') renderResumen();
 
     document.getElementById('nvzSteps').scrollTop = 0;
@@ -1911,8 +1828,6 @@
       else { el.value = el.defaultValue; }
     });
     document.querySelectorAll('#nvz select').forEach(function(el){ el.selectedIndex = 0; });
-    document.getElementById('nvz_grupos_container').innerHTML = '';
-    grupoCamSeq = 0;
     document.getElementById('nvz_alarma_conexion_wrap').style.display = 'none';
     document.getElementById('nvz_alarma_cable_wrap').style.display = 'none';
     document.getElementById('nvz_daisa_accesorios_row').style.display = 'none';
