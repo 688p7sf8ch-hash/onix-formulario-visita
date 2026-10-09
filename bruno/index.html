@@ -163,6 +163,10 @@
   .card-header-side .estado-chip{margin-bottom:0;}
   .estado-generando{background:#fff3cd;color:#8a6300;}
   .estado-listo{background:var(--ok-bg);color:var(--ok);}
+  /* Boton "Listo" (2026-10-09): Necesita cambios = el agente esta corrigiendo; Corregido = ya volvio */
+  .estado-cambios{background:#fff3cd;color:#8a6300;}
+  .estado-corregido{background:var(--ok-bg);color:var(--ok);}
+  .cambios-nota{font-size:12.5px;color:var(--muted);margin:10px 0 0;}
 
   /* ---- Bonus por accion rapida (2026-10-05): datos que Bruno elige al
      aprobar + resumen de precios y link del cliente en Aprobado/Enviado ---- */
@@ -297,6 +301,28 @@
   #nvz .group-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
   #nvz .group-card-head strong{color:var(--green);font-size:13px;}
   #nvz .btn-remove{background:none;border:none;color:var(--danger);font-size:12.5px;font-weight:700;padding:6px 4px;cursor:pointer;}
+  /* Solo mano de obra (2026-10-09): interruptor en el inicio + checklist de materiales */
+  #nvz .mo-toggle{display:flex;gap:12px;align-items:center;padding:14px;border-radius:14px;background:#fff;border:1.5px solid var(--border);margin-bottom:20px;cursor:pointer;box-shadow:var(--shadow-card-sm);}
+  #nvz .mo-toggle.on{border-color:var(--orange);background:#fff3ee;}
+  #nvz .mo-toggle-txt{flex:1;min-width:0;}
+  #nvz .mo-toggle-txt b{display:block;font-size:14.5px;}
+  #nvz .mo-toggle-txt small{display:block;font-size:12px;color:var(--muted);line-height:1.4;margin-top:2px;}
+  #nvz .mo-switch{position:relative;width:48px;height:28px;flex-shrink:0;}
+  #nvz .mo-switch input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;padding:0;cursor:pointer;}
+  #nvz .mo-switch span{position:absolute;inset:0;border-radius:999px;background:#cfd4d0;transition:background .2s;pointer-events:none;}
+  #nvz .mo-switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;}
+  #nvz .mo-switch input:checked + span{background:var(--orange);}
+  #nvz .mo-switch input:checked + span::after{transform:translateX(20px);}
+  #nvz .mat-grp{font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin:16px 0 8px;}
+  #nvz .mat-row{display:grid;grid-template-columns:auto minmax(0,1fr) 96px;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:#fff;border:1.5px solid var(--border);margin-bottom:8px;}
+  #nvz .mat-row.on{border-color:var(--green);background:#f2faf6;}
+  #nvz .mat-row input[type=checkbox]{width:20px;height:20px;padding:0;accent-color:var(--green);margin:0;}
+  #nvz .mat-row .mat-nm{font-size:14px;font-weight:600;line-height:1.25;}
+  #nvz .mat-row .mat-nm small{display:block;font-weight:500;font-size:11.5px;color:var(--muted);}
+  #nvz .mat-row .mat-qty{display:flex;align-items:center;gap:4px;}
+  #nvz .mat-row .mat-qty input{padding:8px 6px;font-size:15px;text-align:right;}
+  #nvz .mat-row .mat-qty input:disabled{opacity:.35;}
+  #nvz .mat-row .mat-qty em{font-style:normal;font-size:11.5px;color:var(--muted);width:20px;}
   #nvz .btn-add-dashed{width:100%;background:#fff;border:1.5px dashed var(--green);color:var(--green);font-weight:700;font-size:13.5px;padding:13px;border-radius:12px;cursor:pointer;}
   #nvz .helper-box{background:#eef6f2;border:1px solid #06664E26;border-radius:12px;padding:12px 14px;font-size:12.6px;color:#33413c;line-height:1.55;margin-bottom:14px;}
   #nvz .helper-box b{color:var(--green);}
@@ -415,6 +441,10 @@
             <div class="brand-sub">Nueva visita t&eacute;cnica</div>
           </div>
         </div>
+        <label class="mo-toggle" id="nvz_solo_mo_box" for="nvz_solo_mo">
+          <span class="mo-toggle-txt"><b>Solo mano de obra</b><small>El cliente pone los equipos. Cotizamos la instalaci&oacute;n y los materiales que tildes.</small></span>
+          <span class="mo-switch"><input type="checkbox" id="nvz_solo_mo"><span></span></span>
+        </label>
         <div class="step-title">&iquest;A qui&eacute;n visitaste?</div>
         <p class="step-sub">Completa los datos del cliente. El resto lo vas a poder cargar en los pr&oacute;ximos pasos.</p>
 
@@ -677,6 +707,10 @@
             <option value="ninguna">Ninguna (solo ver qui&eacute;n llama)</option>
           </select>
         </div>
+        <div class="field" id="nvz_video_electroiman_wrap" style="display:none">
+          <label>Fuerza del electroim&aacute;n</label>
+          <select id="nvz_video_electroiman_lb"><option value="600">600 lb</option><option value="1200">1200 lb</option></select>
+        </div>
         <div class="field">
           <label>Marca preferida (opcional)</label>
           <select id="nvz_video_marca">
@@ -759,6 +793,10 @@
             <option value="ambos">Ambos</option>
           </select>
         </div>
+        <div class="field" id="nvz_portero2h_electroiman_wrap" style="display:none">
+          <label>Fuerza del electroim&aacute;n</label>
+          <select id="nvz_portero2h_electroiman_lb"><option value="600">600 lb</option><option value="1200">1200 lb</option></select>
+        </div>
         <div class="field">
           <label>Marca preferida (opcional)</label>
           <select id="nvz_portero2h_marca">
@@ -800,6 +838,10 @@
               <option value="ambos">Ambos</option>
             </select>
           </div>
+        <div class="field" id="nvz_ctrlacceso_electroiman_wrap" style="display:none">
+          <label>Fuerza del electroim&aacute;n</label>
+          <select id="nvz_ctrlacceso_electroiman_lb"><option value="600">600 lb</option><option value="1200">1200 lb</option></select>
+        </div>
         </div>
         <div class="field">
           <label>Tipo de credencial (puede ser m&aacute;s de una)</label>
@@ -828,6 +870,50 @@
 
       <!-- ===== ETAPA 2 · INSTALACION ===== -->
       <!-- CABLEADO: cable de cada sistema elegido + ducto + daisa -->
+      <!-- SOLO MANO DE OBRA: cantidades (reemplaza a las pantallas de cada sistema) -->
+      <section class="step" data-step="mo_cantidades">
+        <div class="step-eyebrow">Etapa 1 &middot; Equipos</div>
+        <div class="step-title">&iquest;Qu&eacute; instalamos?</div>
+        <p class="step-sub">Solo cantidades: los equipos los pone el cliente. Marca y modelo, si los sab&eacute;s, van en las notas.</p>
+        <div id="nvz_f_mo_cant">
+          <div class="field" data-sys="nvz_tipo_wifi"><label>C&aacute;maras WiFi</label><input type="number" id="nvz_mo_cant_wifi" min="0" inputmode="numeric" placeholder="Ej: 4"></div>
+          <div class="field" data-sys="nvz_tipo_ip"><label>C&aacute;maras IP</label><input type="number" id="nvz_mo_cant_ip" min="0" inputmode="numeric" placeholder="Ej: 4"></div>
+          <div class="field" data-sys="nvz_tipo_analog"><label>C&aacute;maras anal&oacute;gicas</label><input type="number" id="nvz_mo_cant_analog" min="0" inputmode="numeric" placeholder="Ej: 4"></div>
+          <div class="field" data-sys="nvz_tipo_video"><label>Videoporteros (pantallas)</label><input type="number" id="nvz_mo_cant_video" min="0" inputmode="numeric" placeholder="Ej: 1"></div>
+          <div class="field" data-sys="nvz_tipo_alarma"><label>Alarma: sensores y accesorios a instalar</label><input type="number" id="nvz_mo_cant_alarma" min="0" inputmode="numeric" placeholder="Ej: 6"></div>
+          <div class="field" data-sys="nvz_tipo_portero2h"><label>Portero: apartamentos</label><input type="number" id="nvz_mo_cant_portero2h" min="0" inputmode="numeric" placeholder="Ej: 8"></div>
+          <div class="field" data-sys="nvz_tipo_control_acceso"><label>Control de acceso: puertas</label><input type="number" id="nvz_mo_cant_control_acceso" min="0" inputmode="numeric" placeholder="Ej: 1"></div>
+        </div>
+      </section>
+
+      <!-- SOLO MANO DE OBRA: materiales que pone Onix (reemplaza a Cableado/Respaldo/Red) -->
+      <section class="step" data-step="mo_materiales">
+        <div class="step-eyebrow">Etapa 2 &middot; Instalaci&oacute;n</div>
+        <div class="step-title">&iquest;Qu&eacute; materiales ponemos?</div>
+        <p class="step-sub">Tild&aacute; lo que lleva Onix y pon&eacute; la cantidad. Lo que no tildes lo pone el cliente.</p>
+        <div id="nvz_mat_lista">
+          <div class="mat-grp">Cables</div>
+          <label class="mat-row" data-sys-any="nvz_tipo_ip,nvz_tipo_alarma,nvz_tipo_control_acceso,nvz_tipo_video"><input type="checkbox" id="nvz_mat_utp_m_chk"><span class="mat-nm">Cable UTP Cat 5e</span><span class="mat-qty"><input type="number" id="nvz_mat_utp_m" min="0" inputmode="numeric" disabled aria-label="Cable UTP Cat 5e"><em>m</em></span></label>
+          <label class="mat-row" data-sys-any="nvz_tipo_analog"><input type="checkbox" id="nvz_mat_coaxial_m_chk"><span class="mat-nm">Cable coaxial + alimentaci&oacute;n<small>C&aacute;maras anal&oacute;gicas</small></span><span class="mat-qty"><input type="number" id="nvz_mat_coaxial_m" min="0" inputmode="numeric" disabled aria-label="Cable coaxial + alimentaci&oacute;n"><em>m</em></span></label>
+          <label class="mat-row" data-sys-any="nvz_tipo_portero2h"><input type="checkbox" id="nvz_mat_dos_hilos_m_chk"><span class="mat-nm">Cable de 2 hilos<small>Portero</small></span><span class="mat-qty"><input type="number" id="nvz_mat_dos_hilos_m" min="0" inputmode="numeric" disabled aria-label="Cable de 2 hilos"><em>m</em></span></label>
+          <label class="mat-row" data-sys-any="nvz_tipo_wifi"><input type="checkbox" id="nvz_mat_bajo_goma_m_chk"><span class="mat-nm">Cable bajo goma 2&times;1<small>Corriente</small></span><span class="mat-qty"><input type="number" id="nvz_mat_bajo_goma_m" min="0" inputmode="numeric" disabled aria-label="Cable bajo goma 2&times;1"><em>m</em></span></label>
+          <div class="mat-grp" data-sys-any="nvz_tipo_ip,nvz_tipo_analog">Conectores</div>
+          <label class="mat-row" data-sys-any="nvz_tipo_ip"><input type="checkbox" id="nvz_mat_rj45_chk"><span class="mat-nm">Conectores RJ45</span><span class="mat-qty"><input type="number" id="nvz_mat_rj45" min="0" inputmode="numeric" disabled aria-label="Conectores RJ45"><em>u</em></span></label>
+          <label class="mat-row" data-sys-any="nvz_tipo_analog"><input type="checkbox" id="nvz_mat_national_chk"><span class="mat-nm">Conectores national / BNC<small>Macho + hembra</small></span><span class="mat-qty"><input type="number" id="nvz_mat_national" min="0" inputmode="numeric" disabled aria-label="Conectores national / BNC"><em>u</em></span></label>
+          <label class="mat-row" data-sys-any="nvz_tipo_analog"><input type="checkbox" id="nvz_mat_balunes_chk"><span class="mat-nm">Balunes</span><span class="mat-qty"><input type="number" id="nvz_mat_balunes" min="0" inputmode="numeric" disabled aria-label="Balunes"><em>u</em></span></label>
+          <div class="mat-grp">Canalizaci&oacute;n y montaje</div>
+          <label class="mat-row"><input type="checkbox" id="nvz_mat_ducto_m_chk"><span class="mat-nm">Ducto blanco autoadhesivo</span><span class="mat-qty"><input type="number" id="nvz_mat_ducto_m" min="0" inputmode="numeric" disabled aria-label="Ducto blanco autoadhesivo"><em>m</em></span></label>
+          <label class="mat-row"><input type="checkbox" id="nvz_mat_daisa_m_chk"><span class="mat-nm">Ca&ntilde;o daisa</span><span class="mat-qty"><input type="number" id="nvz_mat_daisa_m" min="0" inputmode="numeric" disabled aria-label="Ca&ntilde;o daisa"><em>m</em></span></label>
+          <label class="mat-row"><input type="checkbox" id="nvz_mat_cajas_estanco_chk"><span class="mat-nm">Cajas estanco</span><span class="mat-qty"><input type="number" id="nvz_mat_cajas_estanco" min="0" inputmode="numeric" disabled aria-label="Cajas estanco"><em>u</em></span></label>
+          <label class="mat-row"><input type="checkbox" id="nvz_mat_fuentes_chk"><span class="mat-nm">Fuentes 12 V</span><span class="mat-qty"><input type="number" id="nvz_mat_fuentes" min="0" inputmode="numeric" disabled aria-label="Fuentes 12 V"><em>u</em></span></label>
+          <label class="mat-row"><input type="checkbox" id="nvz_mat_gabinete_chk"><span class="mat-nm">Gabinete met&aacute;lico</span><span class="mat-qty"><input type="number" id="nvz_mat_gabinete" min="0" inputmode="numeric" disabled aria-label="Gabinete met&aacute;lico"><em>u</em></span></label>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label>Otros materiales</label>
+          <input type="text" id="nvz_mat_otros" placeholder="Ej: 2 m&aacute;stiles, torniller&iacute;a">
+        </div>
+      </section>
+
       <section class="step" data-step="cableado">
         <div class="step-eyebrow">Etapa 2 &middot; Instalaci&oacute;n</div>
         <div class="step-title">Cableado</div>
@@ -939,7 +1025,7 @@
 
         <div class="panel-card" style="margin-top:18px">
           <div class="panel-card-title">Para el presupuesto &mdash; lo eleg&iacute;s vos</div>
-          <div class="field">
+          <div class="field" id="nvz_f_propuestas">
             <label>&iquest;Cu&aacute;ntas propuestas armar?</label>
             <div class="check-grid">
               <label class="check-pill"><input type="radio" name="nvz_prop_cant" id="nvz_prop_cant_auto" value="auto" checked><span>Que decida el agente</span></label>
@@ -1026,6 +1112,7 @@
 
   var currentTab = 'pendiente_aprobacion';
   var pollTimer = null;
+  var pollPendTimer = null; // Pendiente se refresca sola mientras haya tarjetas "Necesita cambios"
 
   // Tarjetas colapsadas por default (2026-09-11, pedido de Antonella): cada
   // panel de presupuestos guarda sus items ya traidos (presupuestosCache),
@@ -1123,7 +1210,9 @@
       if (viejo && viejo.length) { presupuestosCache[estado] = viejo; actualizarContadores(); renderPanel(estado); }
       else { document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">Cargando&hellip;</div>'; }
     }
-    return apiGet({ presupuestos: 1, estado: estado }).then(function(res){
+    // La pestana Pendiente muestra tambien las que estan volviendo al agente.
+    var estadoApi = estado === 'pendiente_aprobacion' ? 'pendiente_aprobacion,necesita_cambios' : estado;
+    return apiGet({ presupuestos: 1, estado: estadoApi }).then(function(res){
         var items = (res && res.presupuestos) || [];
         presupuestosCache[estado] = items;
         cacheGuardar(estado, items);
@@ -1132,10 +1221,19 @@
 
         renderPanel(estado);
 
-        if (estado === 'aprobado' && items.some(function(p){ return !p.pdf_url; })) {
-          if (!pollTimer) pollTimer = setInterval(function(){ if (currentTab === 'aprobado') cargarPresupuestos('aprobado'); }, 15000);
-        } else if (pollTimer) {
-          clearInterval(pollTimer); pollTimer = null;
+        if (estado === 'aprobado') {
+          if (items.some(function(p){ return !p.pdf_url; })) {
+            if (!pollTimer) pollTimer = setInterval(function(){ if (currentTab === 'aprobado') cargarPresupuestos('aprobado'); }, 15000);
+          } else if (pollTimer) {
+            clearInterval(pollTimer); pollTimer = null;
+          }
+        }
+        if (estado === 'pendiente_aprobacion') {
+          if (items.some(function(p){ return p.estado === 'necesita_cambios'; })) {
+            if (!pollPendTimer) pollPendTimer = setInterval(function(){ if (currentTab === 'pendiente_aprobacion') cargarPresupuestos('pendiente_aprobacion'); }, 15000);
+          } else if (pollPendTimer) {
+            clearInterval(pollPendTimer); pollPendTimer = null;
+          }
         }
     }).catch(function(){
       if (!presupuestosCache[estado].length) document.querySelector('.panel[data-panel="' + estado + '"]').innerHTML = '<div class="empty">No se pudo cargar.</div>';
@@ -1333,13 +1431,18 @@
 
     var acciones = '';
     var chipHtml = '';
-    if (estado === 'pendiente_aprobacion') {
+    if (estado === 'pendiente_aprobacion' && p.estado === 'necesita_cambios') {
+      chipHtml = '<span class="estado-chip estado-cambios">Necesita cambios</span>';
       acciones =
-        '<textarea class="comentario-input" placeholder="Comentario (opcional para aprobar, obligatorio para rechazar)"></textarea>' +
+        '<p class="cambios-nota">El agente lo est&aacute; corrigiendo. Vuelve a esta lista con la etiqueta &laquo;Corregido&raquo;.</p>' +
+        '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar</button></div>';
+    } else if (estado === 'pendiente_aprobacion') {
+      if (p.correcciones > 0) chipHtml = '<span class="estado-chip estado-corregido">Corregido</span>';
+      acciones =
+        '<textarea class="comentario-input" placeholder="Si escrib&iacute;s algo, vuelve al agente para corregir. Vac&iacute;o = aprobar"></textarea>' +
         bonusFormHtml() +
         '<div class="row">' +
-          '<button class="btn btn-aprobar" data-accion="aprobar" data-id="' + p.id + '">Aprobar</button>' +
-          '<button class="btn btn-rechazar" data-accion="rechazar" data-id="' + p.id + '">Rechazar / comentar</button>' +
+          '<button class="btn btn-aprobar" data-accion="listo" data-id="' + p.id + '">Listo</button>' +
         '</div>' +
         '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar</button></div>';
     } else if (estado === 'aprobado') {
@@ -1412,10 +1515,9 @@
         var comentarioEl = card.querySelector('.comentario-input');
         var comentario = comentarioEl ? comentarioEl.value.trim() : '';
 
-        if (accion === 'rechazar' && !comentario) {
-          alert('Para rechazar, deja un comentario explicando por que.');
-          return;
-        }
+        // Boton unico "Listo" (2026-10-09): con comentario vuelve al agente para
+        // corregir; sin comentario es una aprobacion (sigue el flujo de dos toques).
+        if (accion === 'listo') accion = comentario ? 'pedir_cambios' : 'aprobar';
 
         if (accion === 'eliminar' && !confirm('Eliminar este presupuesto? No se puede deshacer.')) return;
 
@@ -1444,7 +1546,18 @@
         }
 
         btn.disabled = true;
-        var quitar = (accion === 'eliminar' || accion === 'aprobar' || accion === 'rechazar' || accion === 'marcar_enviado');
+        var quitar = (accion === 'eliminar' || accion === 'aprobar' || accion === 'marcar_enviado');
+        if (accion === 'pedir_cambios') {
+          // Optimista: la tarjeta se queda en Pendiente, ya marcada "Necesita cambios".
+          presupuestosCache[estado].forEach(function(x){
+            if (String(x.id) === id) {
+              x.estado = 'necesita_cambios';
+              x.comentarios = (x.comentarios || []).concat([{ autor: 'Bruno', texto: comentario, fecha: new Date().toISOString() }]);
+            }
+          });
+          cacheGuardar(estado, presupuestosCache[estado]);
+          renderPanel(estado);
+        }
         if (quitar) {
           // Optimista: la tarjeta sale al instante; si el backend falla, se recarga.
           presupuestosCache[estado] = presupuestosCache[estado].filter(function(x){ return String(x.id) !== id; });
@@ -1528,7 +1641,56 @@
   function numOrNull(id){ var v = val(id); if (v === '') return null; var n = parseFloat(v); return isNaN(n) ? null : n; }
   function chk(id){ var el = document.getElementById(id); return !!(el && el.checked); }
   function radioVal(name){ var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
-  function propuestasVal(){ var v = radioVal('nvz_prop_cant'); return (v === '1' || v === '2' || v === '3') ? parseInt(v, 10) : null; }
+  function propuestasVal(){ if (soloMO()) return 1; var v = radioVal('nvz_prop_cant'); return (v === '1' || v === '2' || v === '3') ? parseInt(v, 10) : null; }
+
+  // ---- Solo mano de obra (2026-10-09) ----
+  function soloMO(){ return chk('nvz_solo_mo'); }
+  var MO_SISTEMAS = { wifi: 'nvz_tipo_wifi', ip: 'nvz_tipo_ip', analog: 'nvz_tipo_analog', video: 'nvz_tipo_video',
+    alarma: 'nvz_tipo_alarma', portero2h: 'nvz_tipo_portero2h', control_acceso: 'nvz_tipo_control_acceso' };
+  var MO_MATERIALES = [
+    ['utp_m', 'Cable UTP Cat 5e', 'm'], ['coaxial_m', 'Cable coaxial + alimentacion', 'm'],
+    ['dos_hilos_m', 'Cable de 2 hilos', 'm'], ['bajo_goma_m', 'Cable bajo goma 2x1', 'm'],
+    ['rj45', 'Conectores RJ45', 'u'], ['national', 'Conectores national/BNC', 'u'], ['balunes', 'Balunes', 'u'],
+    ['ducto_m', 'Ducto blanco autoadhesivo', 'm'], ['daisa_m', 'Cano daisa', 'm'],
+    ['cajas_estanco', 'Cajas estanco', 'u'], ['fuentes', 'Fuentes 12 V', 'u'], ['gabinete', 'Gabinete metalico', 'u']
+  ];
+  // Un material cuenta solo si esta tildado, su fila esta visible (aplica a los
+  // sistemas elegidos) y tiene cantidad > 0.
+  function materialCant(clave){
+    var cb = document.getElementById('nvz_mat_' + clave + '_chk');
+    if (!cb || !cb.checked) return 0;
+    var fila = cb.closest('.mat-row');
+    if (fila && fila.style.display === 'none') return 0;
+    return numVal('nvz_mat_' + clave);
+  }
+  function instalacionMO(){
+    var out = {};
+    Object.keys(MO_SISTEMAS).forEach(function(k){ out[k] = chk(MO_SISTEMAS[k]) ? numVal('nvz_mo_cant_' + k) : 0; });
+    return out;
+  }
+  function materialesMO(){
+    var out = {};
+    MO_MATERIALES.forEach(function(m){ out[m[0]] = materialCant(m[0]); });
+    out.otros = val('nvz_mat_otros') || null;
+    return out;
+  }
+  function refrescarMO(){
+    document.getElementById('nvz_solo_mo_box').classList.toggle('on', soloMO());
+    document.querySelectorAll('#nvz .mat-row').forEach(function(fila){
+      var cb = fila.querySelector('input[type=checkbox]');
+      var q = fila.querySelector('.mat-qty input');
+      fila.classList.toggle('on', cb.checked);
+      q.disabled = !cb.checked;
+    });
+  }
+  document.getElementById('nvz_solo_mo').addEventListener('change', refrescarMO);
+  document.querySelectorAll('#nvz .mat-row input[type=checkbox]').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      refrescarMO();
+      var q = cb.closest('.mat-row').querySelector('.mat-qty input');
+      if (cb.checked && !q.value) q.focus();
+    });
+  });
   function setFieldInvalid(fieldId, invalid){
     var el = document.getElementById(fieldId);
     if (el) el.classList.toggle('invalid', invalid);
@@ -1570,8 +1732,25 @@
     document.querySelectorAll('#nvz [data-sys]').forEach(function(el){
       el.style.display = chk(el.getAttribute('data-sys')) ? '' : 'none';
     });
+    document.querySelectorAll('#nvz [data-sys-any]').forEach(function(el){
+      el.style.display = el.getAttribute('data-sys-any').split(',').some(chk) ? '' : 'none';
+    });
+    document.getElementById('nvz_f_propuestas').style.display = soloMO() ? 'none' : '';
     document.getElementById('nvz_alarma_cable_wrap').style.display = alarmaLlevaCable() ? 'block' : 'none';
   }
+
+  // ---- fuerza del electroiman (2026-10-09): solo si la cerradura es electroiman o ambos ----
+  var ELECTROIMAN_SIS = ['video', 'portero2h', 'ctrlacceso'];
+  function llevaElectroiman(sis){ var c = val('nvz_' + sis + '_cerradura'); return c === 'electroiman' || c === 'ambos'; }
+  function electroimanLb(sis){ return llevaElectroiman(sis) ? parseInt(val('nvz_' + sis + '_electroiman_lb'), 10) : null; }
+  function refrescarElectroiman(){
+    ELECTROIMAN_SIS.forEach(function(sis){
+      document.getElementById('nvz_' + sis + '_electroiman_wrap').style.display = llevaElectroiman(sis) ? 'block' : 'none';
+    });
+  }
+  ELECTROIMAN_SIS.forEach(function(sis){
+    document.getElementById('nvz_' + sis + '_cerradura').addEventListener('change', refrescarElectroiman);
+  });
 
   // ---- daisa conditional ----
   document.getElementById('nvz_daisa_metros').addEventListener('input', function(){
@@ -1580,6 +1759,21 @@
 
   // ---- datos JSON estructurado (onix-visita-v1) ----
   function construirDatosJSON(){
+    var datos = construirDatosJSONBase();
+    if (!soloMO()) { datos.presupuesto.solo_mano_obra = false; return datos; }
+    // Solo mano de obra: sin equipos. Los objetos de cada sistema y el cableado/red
+    // de la carga normal no se mandan (pueden tener restos si Bruno prendio y apago
+    // el interruptor); van las cantidades y los materiales que pone Onix.
+    Object.keys(MO_SISTEMAS).forEach(function(k){ datos[k] = null; });
+    datos.daisa = { metros: 0, ducto_metros: 0, gabinete: 'no', codos: 0, grampas: 0, uniones: 0, corrugados: 0 };
+    datos.red = { repetidor: 0, router: 0, access_point: 0, obs: null };
+    datos.instalacion = instalacionMO();
+    datos.materiales_onix = materialesMO();
+    datos.presupuesto.solo_mano_obra = true;
+    return datos;
+  }
+
+  function construirDatosJSONBase(){
     var horas = numVal('nvz_horas');
     var incluirComida = horas > 4;
 
@@ -1613,7 +1807,7 @@
         ducto: numVal('nvz_analog_ducto'), marca: val('nvz_analog_marca') || null, ups: val('nvz_analog_ups')
       },
       video: !chk('nvz_tipo_video') ? null : {
-        pantallas: numVal('nvz_video_pantallas'), cerradura: val('nvz_video_cerradura'), cable: numVal('nvz_video_cable'),
+        pantallas: numVal('nvz_video_pantallas'), cerradura: val('nvz_video_cerradura'), electroiman_lb: electroimanLb('video'), cable: numVal('nvz_video_cable'),
         marca: val('nvz_video_marca') || null, obs: val('nvz_video_obs') || null, ups: val('nvz_video_ups')
       },
       alarma: !chk('nvz_tipo_alarma') ? null : {
@@ -1627,11 +1821,11 @@
         bateria: val('nvz_alarma_bateria'), obs: val('nvz_alarma_obs') || null
       },
       portero2h: !chk('nvz_tipo_portero2h') ? null : {
-        aptos: numVal('nvz_portero2h_aptos'), cerradura: val('nvz_portero2h_cerradura'), cable: numVal('nvz_portero2h_cable'),
+        aptos: numVal('nvz_portero2h_aptos'), cerradura: val('nvz_portero2h_cerradura'), electroiman_lb: electroimanLb('portero2h'), cable: numVal('nvz_portero2h_cable'),
         marca: val('nvz_portero2h_marca') || null, obs: val('nvz_portero2h_obs') || null, ups: val('nvz_portero2h_ups')
       },
       control_acceso: !chk('nvz_tipo_control_acceso') ? null : {
-        puertas: numVal('nvz_ctrlacceso_puertas'), sentido: val('nvz_ctrlacceso_sentido'), cerradura: val('nvz_ctrlacceso_cerradura'),
+        puertas: numVal('nvz_ctrlacceso_puertas'), sentido: val('nvz_ctrlacceso_sentido'), cerradura: val('nvz_ctrlacceso_cerradura'), electroiman_lb: electroimanLb('ctrlacceso'),
         credencial: {
           rfid: chk('nvz_ctrlacceso_rfid'), huella: chk('nvz_ctrlacceso_huella'),
           facial: chk('nvz_ctrlacceso_facial'), pin: chk('nvz_ctrlacceso_pin')
@@ -1677,6 +1871,7 @@
     out += 'MONEDA PREFERIDA: ' + val('nvz_moneda') + '\n';
     out += 'PRESUPUESTO DISPONIBLE DEL CLIENTE: ' + (val('nvz_presupuesto_cliente') || 'No indicado') + '\n\n';
     out += 'SISTEMAS A INSTALAR: ' + sistemas.join(' + ') + '\n\n';
+    if (soloMO()) return out + promptSoloMO();
 
     if (chk('nvz_tipo_wifi')) {
       out += '--- SISTEMA WiFi ---\n';
@@ -1716,6 +1911,7 @@
       out += '--- VIDEOPORTERIA ---\n';
       out += 'Pantallas interiores: ' + val('nvz_video_pantallas') + '\n';
       out += 'Tipo de cerradura: ' + val('nvz_video_cerradura') + '\n';
+      if (llevaElectroiman('video')) out += 'Electroiman: ' + electroimanLb('video') + ' lb\n';
       out += 'Metros de cable: ' + (val('nvz_video_cable') || '0') + '\n';
       if (val('nvz_video_marca')) out += 'Marca/modelo preferido: ' + val('nvz_video_marca') + '\n';
       if (val('nvz_video_obs')) out += 'Observaciones: ' + val('nvz_video_obs') + '\n';
@@ -1751,6 +1947,7 @@
       out += '--- PORTERO (2 HILOS, AUDIO) ---\n';
       out += 'Cantidad de apartamentos/estaciones: ' + val('nvz_portero2h_aptos') + '\n';
       out += 'Tipo de cerradura: ' + val('nvz_portero2h_cerradura') + '\n';
+      if (llevaElectroiman('portero2h')) out += 'Electroiman: ' + electroimanLb('portero2h') + ' lb\n';
       out += 'Metros de cable: ' + (val('nvz_portero2h_cable') || '0') + '\n';
       if (val('nvz_portero2h_marca')) out += 'Marca/modelo preferido: ' + val('nvz_portero2h_marca') + '\n';
       if (val('nvz_portero2h_obs')) out += 'Observaciones: ' + val('nvz_portero2h_obs') + '\n';
@@ -1761,6 +1958,7 @@
       out += 'Cantidad de puertas/puntos: ' + val('nvz_ctrlacceso_puertas') + '\n';
       out += 'Sentido: ' + (val('nvz_ctrlacceso_sentido') === 'entrada_salida' ? 'Entrada y salida (2 lectoras)' : 'Solo entrada (1 lectora)') + '\n';
       out += 'Tipo de cerradura: ' + val('nvz_ctrlacceso_cerradura') + '\n';
+      if (llevaElectroiman('ctrlacceso')) out += 'Electroiman: ' + electroimanLb('ctrlacceso') + ' lb\n';
       var credenciales = [];
       if (chk('nvz_ctrlacceso_rfid')) credenciales.push('Tarjeta/tag RFID');
       if (chk('nvz_ctrlacceso_huella')) credenciales.push('Huella dactilar');
@@ -1805,6 +2003,26 @@
     return out;
   }
 
+  function promptSoloMO(){
+    var inst = instalacionMO(), mat = materialesMO();
+    var out = '--- SOLO MANO DE OBRA (el cliente pone los equipos) ---\n';
+    Object.keys(MO_SISTEMAS).forEach(function(k){ if (chk(MO_SISTEMAS[k])) out += 'Cantidad ' + k + ': ' + inst[k] + '\n'; });
+    out += '\n--- MATERIALES QUE PONE ONIX ---\n';
+    var alguno = false;
+    MO_MATERIALES.forEach(function(m){ if (mat[m[0]] > 0) { alguno = true; out += m[1] + ': ' + mat[m[0]] + ' ' + m[2] + '\n'; } });
+    if (mat.otros) { alguno = true; out += 'Otros: ' + mat.otros + '\n'; }
+    if (!alguno) out += 'Ninguno (solo mano de obra)\n';
+    out += '\n--- MANO DE OBRA Y LOGISTICA ---\n';
+    out += 'Horas de trabajo: ' + val('nvz_horas') + '\n';
+    out += 'Kilometros desde el taller: ' + val('nvz_km') + '\n';
+    out += 'IVA en la mano de obra: ' + (chk('nvz_iva_mano_obra') ? 'Si (22%)' : 'NO') + '\n';
+    out += 'Cantidad de propuestas: 1\n\n';
+    if (val('nvz_notas')) out += '--- NOTAS ---\n' + val('nvz_notas') + '\n\n';
+    out += '=== FIN DE DATOS ===\n\n';
+    out += 'INSTRUCCION: Presupuesto de SOLO MANO DE OBRA, seguir CLAUDE.md (MODO SOLO MANO DE OBRA).';
+    return out;
+  }
+
   // ---- resumen ----
   var NOMBRE_SISTEMA_CHIP = {
     nvz_tipo_wifi: 'Camaras WiFi', nvz_tipo_ip: 'Camaras IP', nvz_tipo_analog: 'Analogico',
@@ -1825,8 +2043,16 @@
 
     html += '<div class="summary-block"><h4>Sistemas</h4><div class="summary-chip-row">' + (chips || '<span class="summary-chip">Ninguno seleccionado</span>') + '</div></div>';
 
+    if (soloMO()) {
+      var matTxt = MO_MATERIALES.filter(function(m){ return materialCant(m[0]) > 0; })
+        .map(function(m){ return materialCant(m[0]) + ' ' + m[2] + ' ' + m[1]; });
+      if (val('nvz_mat_otros')) matTxt.push(val('nvz_mat_otros').replace(/</g,'&lt;'));
+      html += '<div class="summary-block"><h4>Solo mano de obra</h4><p>El cliente pone los equipos.</p>' +
+        '<p>Materiales de Onix: ' + (matTxt.length ? matTxt.join(' - ') : 'ninguno') + '</p></div>';
+    }
+
     var red = [];
-    if (numVal('nvz_red_repetidor') > 0) red.push(val('nvz_red_repetidor') + ' repetidor(es)');
+    if (!soloMO() && numVal('nvz_red_repetidor') > 0) red.push(val('nvz_red_repetidor') + ' repetidor(es)');
     if (numVal('nvz_red_router') > 0) red.push(val('nvz_red_router') + ' router(s)');
     if (numVal('nvz_red_ap') > 0) red.push(val('nvz_red_ap') + ' access point(s)');
     if (red.length) html += '<div class="summary-block"><h4>Red</h4><p>' + red.join(' - ') + '</p></div>';
@@ -1909,16 +2135,18 @@
   var STEP_DEFS = [
     { id: 'cliente', stage: 1 },
     { id: 'sistemas', stage: 1 },
-    { id: 'wifi', stage: 1, show: function(){ return chk('nvz_tipo_wifi'); } },
-    { id: 'ip', stage: 1, show: function(){ return chk('nvz_tipo_ip'); } },
-    { id: 'analog', stage: 1, show: function(){ return chk('nvz_tipo_analog'); } },
-    { id: 'video', stage: 1, show: function(){ return chk('nvz_tipo_video'); } },
-    { id: 'alarma', stage: 1, show: function(){ return chk('nvz_tipo_alarma'); } },
-    { id: 'portero2h', stage: 1, show: function(){ return chk('nvz_tipo_portero2h'); } },
-    { id: 'ctrlacceso', stage: 1, show: function(){ return chk('nvz_tipo_control_acceso'); } },
-    { id: 'cableado', stage: 2 },
-    { id: 'respaldo', stage: 2 },
-    { id: 'red', stage: 2 },
+    { id: 'wifi', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_wifi'); } },
+    { id: 'ip', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_ip'); } },
+    { id: 'analog', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_analog'); } },
+    { id: 'video', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_video'); } },
+    { id: 'alarma', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_alarma'); } },
+    { id: 'portero2h', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_portero2h'); } },
+    { id: 'ctrlacceso', stage: 1, show: function(){ return !soloMO() && chk('nvz_tipo_control_acceso'); } },
+    { id: 'mo_cantidades', stage: 1, show: soloMO },
+    { id: 'mo_materiales', stage: 2, show: soloMO },
+    { id: 'cableado', stage: 2, show: function(){ return !soloMO(); } },
+    { id: 'respaldo', stage: 2, show: function(){ return !soloMO(); } },
+    { id: 'red', stage: 2, show: function(){ return !soloMO(); } },
     { id: 'logistica', stage: 3 },
     { id: 'notas', stage: 3 },
     { id: 'resumen', stage: 3 }
@@ -1934,7 +2162,10 @@
     video: { field: 'nvz_video_pantallas', box: 'nvz_f_video_pantallas', msg: 'Completa la cantidad de pantallas' },
     portero2h: { field: 'nvz_portero2h_aptos', box: 'nvz_f_portero2h_aptos', msg: 'Completa la cantidad de apartamentos' },
     ctrlacceso: { field: 'nvz_ctrlacceso_puertas', box: 'nvz_f_ctrlacceso_puertas', msg: 'Completa la cantidad de puertas' },
-    logistica: { field: 'nvz_horas', box: 'nvz_f_horas', msg: 'Completa las horas de trabajo' }
+    logistica: { field: 'nvz_horas', box: 'nvz_f_horas', msg: 'Completa las horas de trabajo' },
+    mo_cantidades: { custom: function(){
+      return Object.keys(MO_SISTEMAS).some(function(k){ return chk(MO_SISTEMAS[k]) && numVal('nvz_mo_cant_' + k) > 0; });
+    }, box: 'nvz_f_mo_cant', msg: 'Pone cuantos equipos se instalan' }
   };
 
   function validateStep(id){
@@ -2035,6 +2266,8 @@
     document.getElementById('nvzStatusBanner').className = 'status-banner';
     document.getElementById('nvzBtnCopyFallback').classList.remove('show');
     setFechaHoy();
+    refrescarMO();
+    refrescarElectroiman();
     currentStepId = 'cliente';
     render();
   }
