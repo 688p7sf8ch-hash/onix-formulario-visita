@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Propuesta — Onix System</title>
+<meta name="description" content="Tu propuesta de Onix System">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#010326">
+<link rel="icon" href="../favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!--
+  Pagina publica de la propuesta para el cliente (bonus por accion rapida,
+  2026-10-05). Se abre con ?t=<token> - el link lo copia Bruno desde la
+  pestana Aprobado de su app. Lee del backend de Apps Script (?propuesta=<token>,
+  sin clave: el token es lo que la protege) y muestra SOLO datos para el cliente.
+  Precio cerrado = Valor cotizado; precio normal = Valor + 15% (lo calcula el backend).
+-->
+<style>
+  :root{
+    --navy:#010326;
+    --ink:#171a2b;
+    --muted:#6b7084;
+    --line:#e6e7ee;
+    --bg:#eef0f4;
+    --card:#ffffff;
+    --orange:#F25116;
+    --blue:#2f6fd6;
+    --green:#06664E;
+    --wa:#1fa855;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    --sans:"Space Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.45;}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 16px 48px;}
+
+  .brand{display:flex;align-items:center;gap:12px;margin:0 0 18px;}
+  .brand img{width:40px;height:40px;border-radius:10px;}
+  .brand .t{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .brand h1{margin:2px 0 0;font-size:20px;font-weight:700;line-height:1.2;}
+
+  .panel{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(1,3,38,.06),0 18px 40px -22px rgba(1,3,38,.35);margin-bottom:22px;}
+  .bar{background:var(--navy);color:#cfd3e6;font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;display:flex;justify-content:space-between;gap:12px;padding:11px 18px;}
+  .bar span:last-child{text-align:right;}
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:28px;padding:22px 22px 24px;}
+  @media (max-width:640px){ .grid{grid-template-columns:1fr;gap:18px;padding:18px 16px 20px;} }
+
+  .chip{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--orange));}
+  .chip.off{background:#9aa0b2;}
+  .normal{margin:14px 0 2px;font-size:18px;color:var(--muted);text-decoration:line-through;text-decoration-thickness:1.5px;}
+  .cerrado{margin:0;font-size:clamp(44px,9vw,58px);font-weight:700;letter-spacing:-.02em;line-height:1.02;color:var(--navy);}
+  .cerrado-lbl{margin:4px 0 12px;font-size:17px;color:#4a5072;}
+  .vig{font-family:var(--mono);font-size:12.5px;color:var(--orange);}
+  .vig.off{color:var(--muted);}
+
+  .rows{display:flex;flex-direction:column;}
+  .rows .r{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
+  .rows .r:first-child{padding-top:2px;}
+  .rows .r b{font-family:var(--mono);font-size:13.5px;font-weight:700;text-align:right;white-space:nowrap;}
+
+  .incluye{padding:18px 22px 22px;border-top:1px solid var(--line);}
+  @media (max-width:640px){ .incluye{padding:16px;} }
+  .incluye h3{margin:0 0 8px;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;}
+  .incluye p{margin:0;white-space:pre-wrap;font-size:15px;}
+  .fotos{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:16px;}
+  .fotos img{max-height:150px;max-width:44%;object-fit:contain;}
+
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 0;}
+  .btn{flex:1 1 220px;display:block;text-align:center;text-decoration:none;font-weight:700;font-size:15.5px;padding:15px 16px;border-radius:12px;}
+  .btn-wa{background:var(--wa);color:#fff;box-shadow:0 12px 24px -12px rgba(31,168,85,.7);}
+  .btn-pdf{background:#fff;color:var(--navy);border:1.5px solid #d3d6e2;}
+  .nota{margin:18px 0 0;font-size:12.5px;color:var(--muted);text-align:center;}
+
+  .estado{text-align:center;color:var(--muted);padding:80px 16px;font-size:15px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="estado">Cargando tu propuesta&hellip;</div></div>
+
+<script>
+(function(){
+  var API = 'https://script.google.com/macros/s/AKfycbz8m3VFQYDvon_vgk-dsNZDISIttOFDdv4DoUmMeKgbLIzdmvZ2KRNBQkh_0nOEhDqUIA/exec';
+  var WHATSAPP = '59892860397';
+  var app = document.getElementById('app');
+  var token = new URLSearchParams(location.search).get('t');
+  var timer = null;
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function usd(n){
+    var r = Math.round(n * 100) / 100;
+    var p = r.toFixed(r % 1 ? 2 : 0).split('.');
+    return 'USD ' + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (p[1] ? ',' + p[1] : '');
+  }
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+  function hora(d){ return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+  function cuando(d, ahora){
+    var hoy = new Date(ahora); hoy.setHours(0,0,0,0);
+    var dia = new Date(d); dia.setHours(0,0,0,0);
+    var diff = Math.round((dia - hoy) / 86400000);
+    if (diff === 0) return 'hoy hasta las ' + hora(d);
+    if (diff === 1) return 'mañana hasta las ' + hora(d);
+    var dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    return 'hasta el ' + dias[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + ' a las ' + hora(d);
+  }
+  function restante(ms){
+    var min = Math.max(0, Math.floor(ms / 60000));
+    var h = Math.floor(min / 60), m = min % 60;
+    return h ? h + ' h ' + m + ' min' : m + ' min';
+  }
+
+  if (!token) { app.innerHTML = '<div class="estado">Este link no es válido. Escribinos por WhatsApp y te lo reenviamos.</div>'; return; }
+
+  fetch(API + '?propuesta=' + encodeURIComponent(token) + '&_=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || !res.ok) throw new Error((res && res.error) || 'error');
+      render(res.propuesta);
+    })
+    .catch(function(){
+      app.innerHTML = '<div class="estado">No pudimos cargar la propuesta. Probá de nuevo en un rato o escribinos por WhatsApp.</div>';
+    });
+
+  function render(p){
+    // Diferencia entre el reloj del servidor y el del celular, para que la
+    // cuenta regresiva no dependa de que el cliente tenga bien la hora.
+    var skew = new Date(p.ahora).getTime() - Date.now();
+    var vence = new Date(p.vigencia_hasta);
+    var multi = p.opciones.length > 1;
+
+    function vigente(){ return Date.now() + skew < vence.getTime(); }
+
+    function waLink(op, i){
+      var txt = 'Hola! Quiero avanzar con la propuesta de Onix System' +
+        (p.subtitulo ? ' (' + p.subtitulo + ')' : '') +
+        (multi ? ', ' + (op.nombre || 'opción ' + (i + 1)) : '') +
+        (vigente() ? ', con la bonificación por acción rápida.' : '. Vi que la bonificación venció, ¿se puede extender?');
+      return 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(txt);
+    }
+
+    function panel(op, i){
+      var ok = vigente();
+      var tieneBonus = op.cerrado != null && op.normal != null;
+      var titulo = multi ? (op.nombre || 'Opción ' + (i + 1)) : 'Propuesta';
+      var precioHtml;
+      if (!tieneBonus) {
+        precioHtml = '';
+      } else if (ok) {
+        precioHtml =
+          '<span class="chip">Bonificación por acción rápida</span>' +
+          '<p class="normal">Precio normal ' + usd(op.normal) + '</p>' +
+          '<p class="cerrado">' + usd(op.cerrado) + '</p>' +
+          '<p class="cerrado-lbl">precio cerrado</p>' +
+          '<div class="vig" data-vig>&#9201; Vigente ' + cuando(vence, Date.now() + skew) + ' &middot; quedan ' + restante(vence - (Date.now() + skew)) + '</div>';
+      } else {
+        precioHtml =
+          '<span class="chip off">Bonificación vencida</span>' +
+          '<p class="cerrado" style="margin-top:14px">' + usd(op.normal) + '</p>' +
+          '<p class="cerrado-lbl">precio</p>' +
+          '<div class="vig off">La bonificación de ' + usd(op.ahorro) + ' venció el ' + vence.getDate() + '/' + (vence.getMonth() + 1) + ' a las ' + hora(vence) + '. Escribinos y vemos si se puede extender.</div>';
+      }
+      var filas = [
+        ['Instalación y configuración', 'incluida'],
+        ['Garantía de equipos', p.garantia_equipos],
+        ['Garantía de instalación', p.garantia_instalacion],
+        tieneBonus && ok ? ['Ahorro por decidir hoy', usd(op.ahorro)] : null,
+        ['Forma de pago', p.forma_pago]
+      ].filter(function(f){ return f && f[1]; }).map(function(f){
+        return '<div class="r"><span>' + esc(f[0]) + '</span><b>' + esc(f[1]) + '</b></div>';
+      }).join('');
+      var fotos = (op.fotos || []).filter(function(u){ return /^https?:\/\//.test(u); }).map(function(u){
+        return '<img src="' + esc(u) + '" alt="" loading="lazy">';
+      }).join('');
+
+      return '<section class="panel">' +
+        '<div class="bar"><span>Onix &middot; ' + esc(titulo) + '</span><span>' + esc(p.cliente) + '</span></div>' +
+        '<div class="grid"><div>' + precioHtml + '</div><div class="rows">' + filas + '</div></div>' +
+        (op.cuerpo || fotos ? '<div class="incluye"><h3>Qué incluye</h3><p>' + esc(op.cuerpo) + '</p>' + (fotos ? '<div class="fotos">' + fotos + '</div>' : '') + '</div>' : '') +
+        '<div class="incluye" style="border-top:none;padding-top:0"><div class="cta">' +
+          '<a class="btn btn-wa" href="' + waLink(op, i) + '" target="_blank" rel="noopener">' + (ok ? 'Quiero avanzar' : 'Consultar por WhatsApp') + '</a>' +
+          (p.pdf_url && !multi ? '<a class="btn btn-pdf" href="' + esc(p.pdf_url) + '" target="_blank" rel="noopener">Ver presupuesto en PDF</a>' : '') +
+        '</div></div>' +
+      '</section>';
+    }
+
+    app.innerHTML =
+      '<header class="brand"><img src="../icon-192.png" alt="Onix System">' +
+        '<div><div class="t">Propuesta para ' + esc(p.cliente) + '</div><h1>' + esc(p.subtitulo || 'Tu propuesta') + '</h1></div></header>' +
+      p.opciones.map(panel).join('') +
+      (p.pdf_url && multi ? '<div class="cta"><a class="btn btn-pdf" href="' + esc(p.pdf_url) + '" target="_blank" rel="noopener">Ver presupuesto completo en PDF</a></div>' : '') +
+      '<p class="nota">Onix System &middot; WhatsApp +598 92 860 397 &middot; info@onixsystem.com.uy</p>';
+
+    // Cuenta regresiva: refresca cada 30 s; al vencer, redibuja con el precio normal.
+    var estabaVigente = vigente();
+    clearInterval(timer);
+    timer = setInterval(function(){
+      if (estabaVigente && !vigente()) { estabaVigente = false; render(p); return; }
+      document.querySelectorAll('[data-vig]').forEach(function(el){
+        el.innerHTML = '&#9201; Vigente ' + cuando(vence, Date.now() + skew) + ' &middot; quedan ' + restante(vence - (Date.now() + skew));
+      });
+    }, 30000);
+  }
+})();
+</script>
+</body>
+</html>

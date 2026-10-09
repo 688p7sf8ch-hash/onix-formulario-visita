@@ -164,6 +164,24 @@
   .estado-generando{background:#fff3cd;color:#8a6300;}
   .estado-listo{background:var(--ok-bg);color:var(--ok);}
 
+  /* ---- Bonus por accion rapida (2026-10-05): datos que Bruno elige al
+     aprobar + resumen de precios y link del cliente en Aprobado/Enviado ---- */
+  .bonus-form{margin-top:10px;padding:12px;border-radius:12px;background:var(--field-bg);border:1px solid var(--border);}
+  .bonus-form[hidden]{display:none;}
+  .bonus-form .bf-title{font-size:12px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.4px;margin:0 0 8px;}
+  .bonus-form label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:8px 0 3px;}
+  .bonus-form input{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);}
+  .bonus-form .bf-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;}
+  .bonus-box{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff6f1;border:1px solid #f9d3c3;font-size:13px;}
+  .bonus-box .bb-vig{font-weight:800;color:var(--orange);margin:0 0 6px;font-size:12.5px;}
+  .bonus-box .bb-vig.vencido{color:var(--muted);}
+  .bonus-box .bb-op{display:flex;justify-content:space-between;gap:8px;padding:2px 0;}
+  .bonus-box .bb-op s{color:var(--muted);font-weight:600;}
+  .bonus-box .bb-op b{color:var(--navy);}
+  .bonus-box .bb-link{display:block;margin-top:6px;font-size:11.5px;color:var(--muted);word-break:break-all;}
+  .btn-sec{background:#fff;color:var(--navy);border:1.5px solid var(--border);box-shadow:none;}
+  .btn-wa{background:#1fa855;color:#fff;box-shadow:0 10px 22px -8px rgba(31,168,85,.5);}
+
   textarea.comentario-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 10px;font-size:13.5px;font-family:inherit;resize:vertical;min-height:52px;margin-top:8px;}
 
   a.btn-descargar{display:block;text-align:center;background:var(--navy);color:#fff;text-decoration:none;border-radius:12px;padding:12px 10px;font-size:13.5px;font-weight:800;margin-top:10px;box-shadow:0 10px 22px -8px rgba(1,3,38,.45);transition:transform .12s ease;}
@@ -1244,6 +1262,71 @@
     return opcionesHtml + (comentariosHtml ? '<div class="comentarios">' + comentariosHtml + '</div>' : '');
   }
 
+  // ---- Bonus por accion rapida (2026-10-05) ----
+  // El precio cerrado es el Valor que cotiza el agente; el normal (tachado) lo
+  // calcula el backend (+15%) al aprobar. La pagina del cliente vive en
+  // onix-formulario-visita/propuesta/ y se abre con el token del bonus.
+  var PROPUESTA_URL = 'https://688p7sf8ch-hash.github.io/onix-formulario-visita/propuesta/?t=';
+
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+  // Default de la vigencia: hoy 18:00; si ya son las 17 o mas, manana 18:00.
+  function vigenciaDefault(){
+    var d = new Date();
+    if (d.getHours() >= 17) d.setDate(d.getDate() + 1);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T18:00';
+  }
+  function fmtUSD(n){
+    if (n == null || isNaN(n)) return '';
+    var r = Math.round(n * 100) / 100;
+    var partes = r.toFixed(r % 1 ? 2 : 0).split('.');
+    return 'U$D ' + partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (partes[1] ? ',' + partes[1] : '');
+  }
+  function fmtVigencia(iso){
+    var d = new Date(iso);
+    var dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    return dias[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ' h';
+  }
+
+  function bonusFormHtml(){
+    return '<div class="bonus-form" hidden>' +
+      '<p class="bf-title">Bonificación por acción rápida</p>' +
+      '<label>Vigente hasta</label><input type="datetime-local" class="bf-vigencia" value="' + vigenciaDefault() + '">' +
+      '<div class="bf-grid">' +
+        '<div><label>Garantía de equipos</label><input class="bf-gar-eq" value="1 año"></div>' +
+        '<div><label>Garantía de instalación</label><input class="bf-gar-inst" value="2 años"></div>' +
+      '</div>' +
+      '<label>Forma de pago</label><input class="bf-pago" value="Transferencia">' +
+    '</div>';
+  }
+
+  function bonusBoxHtml(p, conAcciones){
+    var b = p.bonus;
+    if (!b) return '';
+    var vencido = new Date(b.vigencia_hasta).getTime() < Date.now();
+    var opciones = (p.resumen && p.resumen.opciones) || [];
+    var filas = (b.opciones || []).map(function(o, i){
+      if (o.cerrado == null) return '';
+      var nombre = (opciones[i] && opciones[i].nombre) || ((b.opciones.length > 1) ? 'Opción ' + (i + 1) : 'Precio');
+      return '<div class="bb-op"><span>' + escapeHtml(nombre) + '</span><span><s>' + fmtUSD(o.normal) + '</s> &rarr; <b>' + fmtUSD(o.cerrado) + '</b></span></div>';
+    }).join('');
+    var link = PROPUESTA_URL + encodeURIComponent(b.token);
+    var waTexto = 'Hola! Te paso la propuesta de Onix System: ' + link;
+    var html = '<div class="bonus-box">' +
+      '<p class="bb-vig' + (vencido ? ' vencido' : '') + '">' + (vencido ? 'Bonus vencido el ' : 'Bonus vigente hasta ') + fmtVigencia(b.vigencia_hasta) + '</p>' +
+      filas +
+      '<a class="bb-link" href="' + link + '" target="_blank" rel="noopener">' + escapeHtml(link) + '</a>' +
+    '</div>';
+    if (conAcciones) {
+      html +=
+        '<div class="row">' +
+          '<a class="btn btn-wa" style="text-align:center;text-decoration:none" href="https://wa.me/?text=' + encodeURIComponent(waTexto) + '" target="_blank" rel="noopener">Mandar por WhatsApp</a>' +
+          '<button class="btn btn-sec" data-copiar="' + escapeHtml(link) + '">Copiar link</button>' +
+        '</div>' +
+        '<div class="row"><button class="btn btn-sec" data-accion="extender_bonus" data-id="' + p.id + '">Extender bonus +24 h</button></div>';
+    }
+    return html;
+  }
+
   function renderCard(p, estado){
     var resumen = p.resumen || { subtitulo: '', opciones: [] };
     var opciones = resumen.opciones || [];
@@ -1253,6 +1336,7 @@
     if (estado === 'pendiente_aprobacion') {
       acciones =
         '<textarea class="comentario-input" placeholder="Comentario (opcional para aprobar, obligatorio para rechazar)"></textarea>' +
+        bonusFormHtml() +
         '<div class="row">' +
           '<button class="btn btn-aprobar" data-accion="aprobar" data-id="' + p.id + '">Aprobar</button>' +
           '<button class="btn btn-rechazar" data-accion="rechazar" data-id="' + p.id + '">Rechazar / comentar</button>' +
@@ -1262,12 +1346,16 @@
       if (p.pdf_url) {
         chipHtml = '<span class="estado-chip estado-listo">PDF listo</span>';
         acciones =
+          bonusBoxHtml(p, true) +
           '<a class="btn-descargar" href="' + p.pdf_url + '" target="_blank" rel="noopener">Descargar PDF</a>' +
           '<div class="row"><button class="btn btn-enviado" data-accion="marcar_enviado" data-id="' + p.id + '">Marcar enviado</button></div>';
       } else {
         chipHtml = '<span class="estado-chip estado-generando">Generando PDF&hellip;</span>';
+        acciones = bonusBoxHtml(p, false);
       }
       acciones += '<div class="row"><button class="btn btn-eliminar" data-accion="eliminar" data-id="' + p.id + '">Eliminar</button></div>';
+    } else if (estado === 'enviado') {
+      acciones = bonusBoxHtml(p, true);
     }
 
     // Primera linea de precio de cada opcion, para poder identificar la
@@ -1308,6 +1396,14 @@
         expandedIds[estado][id] = nowExpanded;
       });
     });
+    container.querySelectorAll('button[data-copiar]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var txt = btn.dataset.copiar;
+        var listo = function(){ btn.textContent = '¡Copiado!'; setTimeout(function(){ btn.textContent = 'Copiar link'; }, 1600); };
+        if (navigator.clipboard) navigator.clipboard.writeText(txt).then(listo, function(){ prompt('Copiá el link:', txt); });
+        else prompt('Copiá el link:', txt);
+      });
+    });
     container.querySelectorAll('button[data-accion]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var accion = btn.dataset.accion;
@@ -1323,6 +1419,30 @@
 
         if (accion === 'eliminar' && !confirm('Eliminar este presupuesto? No se puede deshacer.')) return;
 
+        // Aprobar en dos pasos: el primer toque abre los datos del bonus por
+        // accion rapida (vigencia, garantias, forma de pago); el segundo confirma.
+        var extra = {};
+        if (accion === 'aprobar') {
+          var form = card.querySelector('.bonus-form');
+          if (form && form.hidden) {
+            form.hidden = false;
+            btn.textContent = 'Confirmar aprobación';
+            return;
+          }
+          if (form) {
+            var vig = form.querySelector('.bf-vigencia').value;
+            var vigDate = vig ? new Date(vig) : null;
+            if (!vigDate || isNaN(vigDate.getTime())) { alert('Poné hasta cuándo vale el bonus.'); return; }
+            if (vigDate.getTime() <= Date.now()) { alert('La vigencia tiene que ser en el futuro.'); return; }
+            extra = {
+              vigencia_hasta: vigDate.toISOString(),
+              garantia_equipos: form.querySelector('.bf-gar-eq').value.trim(),
+              garantia_instalacion: form.querySelector('.bf-gar-inst').value.trim(),
+              forma_pago: form.querySelector('.bf-pago').value.trim()
+            };
+          }
+        }
+
         btn.disabled = true;
         var quitar = (accion === 'eliminar' || accion === 'aprobar' || accion === 'rechazar' || accion === 'marcar_enviado');
         if (quitar) {
@@ -1332,7 +1452,9 @@
           actualizarContadores();
           renderPanel(estado);
         }
-        apiGet({ accion: accion, id: id, comentario: comentario, autor: 'Bruno' })
+        var params = { accion: accion, id: id, comentario: comentario, autor: 'Bruno' };
+        Object.keys(extra).forEach(function(k){ params[k] = extra[k]; });
+        apiGet(params)
           .then(function(res){
             if (res && res.ok) { cargar(currentTab); }
             else { btn.disabled = false; alert('No se pudo: ' + ((res && res.error) || 'error desconocido')); if (quitar) cargar(currentTab); }
