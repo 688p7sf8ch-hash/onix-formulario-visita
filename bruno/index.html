@@ -235,6 +235,10 @@
   #nvz .progress-track{background:rgba(255,255,255,0.14);height:6px;border-radius:6px;overflow:hidden;}
   #nvz .progress-fill{height:100%;width:8%;background:linear-gradient(90deg,var(--green),var(--orange));border-radius:6px;transition:width .25s ease;}
   #nvz .progress-label{color:#aab1c8;font-size:11.5px;font-weight:600;letter-spacing:.3px;margin-top:5px;}
+  #nvz .stage-row{display:flex;gap:6px;margin-bottom:7px;}
+  #nvz .stage-row span{flex:1;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#7d859c;padding:4px 2px;border-radius:999px;background:rgba(255,255,255,0.06);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #nvz .stage-row span.done{color:#cfe9df;}
+  #nvz .stage-row span.active{color:#fff;background:var(--green);}
 
   #nvz .steps{flex:1;position:relative;}
   #nvz .step{display:none;padding:22px 18px 28px;animation:wizfadein .22s ease;}
@@ -390,6 +394,11 @@
         <button class="icon-btn" id="nvzBtnBack" aria-label="Atr&aacute;s">&lsaquo;</button>
         <div class="progress-wrap">
           <div class="progress-track"><div class="progress-fill" id="nvzProgressFill"></div></div>
+          <div class="stage-row" id="nvzStageRow">
+            <span data-stage="1">Equipos</span>
+            <span data-stage="2">Instalaci&oacute;n</span>
+            <span data-stage="3">Mano de obra</span>
+          </div>
           <div class="progress-label" id="nvzProgressLabel">Paso 1 de 9</div>
         </div>
       </div>
@@ -438,9 +447,9 @@
 
       <!-- SISTEMAS -->
       <section class="step" data-step="sistemas">
-        <div class="step-eyebrow">2 &middot; Sistemas</div>
+        <div class="step-eyebrow">Etapa 1 &middot; Equipos</div>
         <div class="step-title">&iquest;Qu&eacute; sistemas instalamos?</div>
-        <p class="step-sub">Pod&eacute;s elegir m&aacute;s de uno &mdash; se abre un paso por cada uno.</p>
+        <p class="step-sub">Pod&eacute;s elegir m&aacute;s de uno. Primero cargamos los equipos de cada sistema; el cableado, UPS y mano de obra van despu&eacute;s.</p>
 
         <div class="system-grid">
           <div class="system-opt">
@@ -519,21 +528,6 @@
             <option value="256GB">256 GB</option>
           </select>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label>&iquest;Repetidor WiFi?</label>
-            <select id="nvz_wifi_repetidor"><option value="si">S&iacute;</option><option value="no">No</option></select>
-          </div>
-          <div class="field">
-            <label>&iquest;UPS?</label>
-            <select id="nvz_wifi_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Metros de cable de corriente</label>
-          <input type="number" id="nvz_wifi_cable" min="0" inputmode="numeric" placeholder="Ej: 15">
-          <span class="hint">Consultar en visita &mdash; var&iacute;a por tomacorriente</span>
-        </div>
         <div class="field">
           <label>Marca / modelo preferido (opcional)</label>
           <select id="nvz_wifi_marca">
@@ -597,9 +591,6 @@
               <option value="24p">24 puertos</option>
             </select>
           </div>
-          <div class="field"><label>Metros de cable UTP</label><input type="number" id="nvz_ip_cable" min="0" inputmode="numeric" placeholder="Ej: 80"></div>
-        </div>
-        <div class="grid2">
           <div class="field">
             <label>Marca preferida</label>
             <select id="nvz_ip_marca">
@@ -612,10 +603,6 @@
               <option value="Tiandy">Tiandy</option>
               <option value="Otra">Otra (aclarar en notas)</option>
             </select>
-          </div>
-          <div class="field">
-            <label>&iquest;UPS?</label>
-            <select id="nvz_ip_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
           </div>
         </div>
       </section>
@@ -656,12 +643,7 @@
             </select>
           </div>
         </div>
-        <div class="grid2">
-          <div class="field"><label>Metros de cable</label><input type="number" id="nvz_analog_cable" min="0" inputmode="numeric" placeholder="Ej: 60"></div>
-          <div class="field"><label>Metros de ducto</label><input type="number" id="nvz_analog_ducto" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
-        </div>
-        <div class="grid2">
-          <div class="field">
+        <div class="field">
             <label>Marca preferida</label>
             <select id="nvz_analog_marca">
               <option value="">Sin preferencia</option>
@@ -673,11 +655,6 @@
               <option value="Tiandy">Tiandy</option>
               <option value="Otra">Otra (aclarar en notas)</option>
             </select>
-          </div>
-          <div class="field">
-            <label>&iquest;UPS?</label>
-            <select id="nvz_analog_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
-          </div>
         </div>
       </section>
 
@@ -697,19 +674,14 @@
             <option value="electroiman">Electroim&aacute;n</option>
             <option value="cerrojo">Cerrojo el&eacute;ctrico</option>
             <option value="ambos">Ambos</option>
+            <option value="ninguna">Ninguna (solo ver qui&eacute;n llama)</option>
           </select>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Metros de cable</label><input type="number" id="nvz_video_cable" min="0" inputmode="numeric" placeholder="Ej: 30"></div>
-          <div class="field">
-            <label>&iquest;UPS?</label>
-            <select id="nvz_video_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
-          </div>
         </div>
         <div class="field">
           <label>Marca preferida (opcional)</label>
           <select id="nvz_video_marca">
             <option value="">Sin preferencia</option>
+            <option value="EZVIZ">EZVIZ</option>
             <option value="Hikvision">Hikvision</option>
             <option value="Intelbras">Intelbras</option>
             <option value="Dahua">Dahua</option>
@@ -735,6 +707,7 @@
           <select id="nvz_alarma_marca">
             <option value="">Seleccionar</option>
             <option value="Hikvision AX PRO">Hikvision AX PRO (inal&aacute;mbrica)</option>
+            <option value="Hikvision AX PRO Hibrida">Hikvision AX PRO H&iacute;brida (cableada + inal&aacute;mbrica)</option>
             <option value="Intelbras">Intelbras</option>
           </select>
         </div>
@@ -745,11 +718,6 @@
             <option value="cableada">Cableada (UTP)</option>
             <option value="mixta">Mixta</option>
           </select>
-        </div>
-        <div class="field" id="nvz_alarma_cable_wrap" style="display:none">
-          <label>Metros de cable UTP</label>
-          <input type="number" id="nvz_alarma_cable_utp" min="0" inputmode="numeric" placeholder="Ej: 40">
-          <span class="hint">Cable UTP Cat 5e &mdash; USD 1/m (IVA incluido)</span>
         </div>
 
         <div class="grid3">
@@ -762,15 +730,9 @@
           <div class="field"><label>Teclados</label><input type="number" id="nvz_alarma_teclado" min="0" value="0" inputmode="numeric"></div>
           <div class="field"><label>Controles remotos</label><input type="number" id="nvz_alarma_control" min="0" value="0" inputmode="numeric"></div>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label>Central incluida</label>
-            <select id="nvz_alarma_central"><option value="si">S&iacute;</option><option value="no">No (ya tiene)</option></select>
-          </div>
-          <div class="field">
-            <label>Bater&iacute;a de respaldo</label>
-            <select id="nvz_alarma_bateria"><option value="si">S&iacute;</option><option value="no">No</option></select>
-          </div>
+        <div class="field">
+          <label>Central incluida</label>
+          <select id="nvz_alarma_central"><option value="si">S&iacute;</option><option value="no">No (ya tiene)</option></select>
         </div>
         <div class="field">
           <label>Observaciones de alarma</label>
@@ -796,13 +758,6 @@
             <option value="cerrojo">Cerrojo el&eacute;ctrico</option>
             <option value="ambos">Ambos</option>
           </select>
-        </div>
-        <div class="grid2">
-          <div class="field"><label>Metros de cable (2 hilos)</label><input type="number" id="nvz_portero2h_cable" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
-          <div class="field">
-            <label>&iquest;UPS?</label>
-            <select id="nvz_portero2h_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
-          </div>
         </div>
         <div class="field">
           <label>Marca preferida (opcional)</label>
@@ -855,22 +810,15 @@
             <label class="check-pill"><input type="checkbox" id="nvz_ctrlacceso_pin"><span>Clave/PIN o app</span></label>
           </div>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label>Marca preferida (opcional)</label>
-            <select id="nvz_ctrlacceso_marca">
-              <option value="">Sin preferencia</option>
-              <option value="Hikvision">Hikvision</option>
-              <option value="ZKTeco">ZKTeco</option>
-              <option value="Intelbras">Intelbras</option>
-              <option value="Otra">Otra (aclarar en notas)</option>
-            </select>
-          </div>
-          <div class="field"><label>Metros de cable</label><input type="number" id="nvz_ctrlacceso_cable" min="0" inputmode="numeric" placeholder="Ej: 15"></div>
-        </div>
         <div class="field">
-          <label>&iquest;UPS?</label>
-          <select id="nvz_ctrlacceso_ups"><option value="no">No</option><option value="si">S&iacute;</option></select>
+          <label>Marca preferida (opcional)</label>
+          <select id="nvz_ctrlacceso_marca">
+            <option value="">Sin preferencia</option>
+            <option value="Hikvision">Hikvision</option>
+            <option value="ZKTeco">ZKTeco</option>
+            <option value="Intelbras">Intelbras</option>
+            <option value="Otra">Otra (aclarar en notas)</option>
+          </select>
         </div>
         <div class="field">
           <label>Observaciones espec&iacute;ficas</label>
@@ -878,58 +826,110 @@
         </div>
       </section>
 
-      <!-- DAISA -->
-      <section class="step" data-step="daisa">
-        <div class="step-eyebrow">Cableado</div>
-        <div class="step-title">Daisa y ducto (general)</div>
-        <p class="step-sub">Si ya cargaste metros de cable en la secci&oacute;n del sistema, dej&aacute; esto en 0. Es solo para lo adicional o compartido entre sistemas.</p>
+      <!-- ===== ETAPA 2 · INSTALACION ===== -->
+      <!-- CABLEADO: cable de cada sistema elegido + ducto + daisa -->
+      <section class="step" data-step="cableado">
+        <div class="step-eyebrow">Etapa 2 &middot; Instalaci&oacute;n</div>
+        <div class="step-title">Cableado</div>
+        <p class="step-sub">Metros de cable de cada sistema, ducto y ca&ntilde;o daisa.</p>
 
-        <div class="grid2">
-          <div class="field"><label>Metros de ca&ntilde;o daisa</label><input type="number" id="nvz_daisa_metros" min="0" value="0" inputmode="numeric"><span class="hint">Se consigue en Fivisa</span></div>
-          <div class="field"><label>Metros de ducto</label><input type="number" id="nvz_ducto_metros" min="0" value="0" inputmode="numeric"></div>
-        </div>
-        <div class="field">
-          <label>&iquest;Gabinete necesario?</label>
-          <select id="nvz_gabinete"><option value="no">No</option><option value="si">S&iacute; (Balanir)</option></select>
-        </div>
-        <div id="nvz_daisa_accesorios_row" style="display:none">
-          <div class="grid3">
-            <div class="field"><label>Codos</label><input type="number" id="nvz_daisa_codos" min="0" value="0" inputmode="numeric"></div>
-            <div class="field"><label>Grampas</label><input type="number" id="nvz_daisa_grampas" min="0" value="0" inputmode="numeric"></div>
-            <div class="field"><label>Uniones</label><input type="number" id="nvz_daisa_uniones" min="0" value="0" inputmode="numeric"></div>
+        <div class="panel-card">
+          <div class="panel-card-title">Cable por sistema</div>
+          <div class="field" data-sys="nvz_tipo_wifi">
+            <label>C&aacute;maras WiFi &mdash; metros de cable de corriente</label>
+            <input type="number" id="nvz_wifi_cable" min="0" inputmode="numeric" placeholder="Ej: 15">
+            <span class="hint">Var&iacute;a seg&uacute;n d&oacute;nde est&eacute;n los tomacorrientes</span>
           </div>
-          <div class="field"><label>Corrugados</label><input type="number" id="nvz_daisa_corrugados" min="0" value="0" inputmode="numeric"></div>
+          <div class="field" data-sys="nvz_tipo_ip"><label>C&aacute;maras IP &mdash; metros de cable UTP</label><input type="number" id="nvz_ip_cable" min="0" inputmode="numeric" placeholder="Ej: 80"></div>
+          <div class="field" data-sys="nvz_tipo_analog"><label>Anal&oacute;gico &mdash; metros de cable</label><input type="number" id="nvz_analog_cable" min="0" inputmode="numeric" placeholder="Ej: 60"></div>
+          <div class="field" data-sys="nvz_tipo_video"><label>Videoporter&iacute;a &mdash; metros de cable</label><input type="number" id="nvz_video_cable" min="0" inputmode="numeric" placeholder="Ej: 30"></div>
+          <div class="field" id="nvz_alarma_cable_wrap" style="display:none">
+            <label>Alarma &mdash; metros de cable UTP</label>
+            <input type="number" id="nvz_alarma_cable_utp" min="0" inputmode="numeric" placeholder="Ej: 40">
+            <span class="hint">Alarma AX PRO H&iacute;brida, o Intelbras cableada/mixta</span>
+          </div>
+          <div class="field" data-sys="nvz_tipo_portero2h"><label>Portero &mdash; metros de cable (2 hilos)</label><input type="number" id="nvz_portero2h_cable" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
+          <div class="field" data-sys="nvz_tipo_control_acceso"><label>Control de acceso &mdash; metros de cable</label><input type="number" id="nvz_ctrlacceso_cable" min="0" inputmode="numeric" placeholder="Ej: 15"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-title">Ducto y daisa</div>
+          <div class="field" data-sys="nvz_tipo_analog"><label>Metros de ducto (sistema anal&oacute;gico)</label><input type="number" id="nvz_analog_ducto" min="0" inputmode="numeric" placeholder="Ej: 20"></div>
+          <div class="grid2">
+            <div class="field"><label>Metros de ca&ntilde;o daisa</label><input type="number" id="nvz_daisa_metros" min="0" value="0" inputmode="numeric"><span class="hint">Se consigue en Fivisa</span></div>
+            <div class="field"><label>Metros de ducto (general)</label><input type="number" id="nvz_ducto_metros" min="0" value="0" inputmode="numeric"></div>
+          </div>
+          <div id="nvz_daisa_accesorios_row" style="display:none">
+            <div class="grid3">
+              <div class="field"><label>Codos</label><input type="number" id="nvz_daisa_codos" min="0" value="0" inputmode="numeric"></div>
+              <div class="field"><label>Grampas</label><input type="number" id="nvz_daisa_grampas" min="0" value="0" inputmode="numeric"></div>
+              <div class="field"><label>Uniones</label><input type="number" id="nvz_daisa_uniones" min="0" value="0" inputmode="numeric"></div>
+            </div>
+            <div class="field"><label>Corrugados</label><input type="number" id="nvz_daisa_corrugados" min="0" value="0" inputmode="numeric"></div>
+          </div>
+          <div class="field">
+            <label>&iquest;Gabinete necesario?</label>
+            <select id="nvz_gabinete"><option value="no">No</option><option value="si">S&iacute; (Balanir)</option></select>
+          </div>
         </div>
       </section>
 
-      <!-- LOGISTICA -->
+      <!-- UPS / RESPALDO: una pregunta por sistema elegido -->
+      <section class="step" data-step="respaldo">
+        <div class="step-eyebrow">Etapa 2 &middot; Instalaci&oacute;n</div>
+        <div class="step-title">UPS y respaldo</div>
+        <p class="step-sub">&iquest;Qu&eacute; sistemas llevan respaldo de energ&iacute;a?</p>
+
+        <div class="field" data-sys="nvz_tipo_wifi"><label>C&aacute;maras WiFi &mdash; &iquest;UPS?</label><select id="nvz_wifi_ups"><option value="no">No</option><option value="si">S&iacute;</option></select></div>
+        <div class="field" data-sys="nvz_tipo_ip"><label>C&aacute;maras IP &mdash; &iquest;UPS?</label><select id="nvz_ip_ups"><option value="no">No</option><option value="si">S&iacute;</option></select></div>
+        <div class="field" data-sys="nvz_tipo_analog"><label>Anal&oacute;gico &mdash; &iquest;UPS?</label><select id="nvz_analog_ups"><option value="no">No</option><option value="si">S&iacute;</option></select></div>
+        <div class="field" data-sys="nvz_tipo_video"><label>Videoporter&iacute;a &mdash; &iquest;UPS?</label><select id="nvz_video_ups"><option value="no">No</option><option value="si">S&iacute;</option></select></div>
+        <div class="field" data-sys="nvz_tipo_alarma">
+          <label>Alarma &mdash; bater&iacute;a de respaldo</label>
+          <select id="nvz_alarma_bateria"><option value="si">S&iacute;</option><option value="no">No</option></select>
+        </div>
+        <div class="field" data-sys="nvz_tipo_portero2h"><label>Portero &mdash; &iquest;UPS?</label><select id="nvz_portero2h_ups"><option value="no">No</option><option value="si">S&iacute;</option></select></div>
+        <div class="field" data-sys="nvz_tipo_control_acceso"><label>Control de acceso &mdash; &iquest;UPS?</label><select id="nvz_ctrlacceso_ups"><option value="no">No</option><option value="si">S&iacute;</option></select></div>
+      </section>
+
+      <!-- RED: routers / TP-Link, solo si hace falta -->
+      <section class="step" data-step="red">
+        <div class="step-eyebrow">Etapa 2 &middot; Instalaci&oacute;n</div>
+        <div class="step-title">Red: routers y TP-Link</div>
+        <p class="step-sub">Solo si hace falta equipo de red extra. Si no, dej&aacute; todo en 0.</p>
+
+        <div class="grid3">
+          <div class="field"><label>Repetidores WiFi</label><input type="number" id="nvz_red_repetidor" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Routers</label><input type="number" id="nvz_red_router" min="0" value="0" inputmode="numeric"></div>
+          <div class="field"><label>Access points</label><input type="number" id="nvz_red_ap" min="0" value="0" inputmode="numeric"></div>
+        </div>
+        <span class="hint" style="display:block;font-size:11.5px;color:var(--muted);margin:-6px 0 14px">TP-Link (OK Computers). El switch PoE de las c&aacute;maras IP va en Etapa 1.</span>
+        <div class="field">
+          <label>Observaciones de red</label>
+          <input type="text" id="nvz_red_obs" placeholder="Ej: la se&ntilde;al no llega al fondo, router del cliente viejo...">
+        </div>
+      </section>
+
+      <!-- ===== ETAPA 3 · MANO DE OBRA ===== -->
       <section class="step" data-step="logistica">
-        <div class="step-eyebrow">Mano de obra</div>
-        <div class="step-title">Horas y log&iacute;stica</div>
+        <div class="step-eyebrow">Etapa 3 &middot; Mano de obra</div>
+        <div class="step-title">Horas y kil&oacute;metros</div>
 
         <div class="field" id="nvz_f_horas">
           <label>Horas de trabajo estimadas</label>
           <input type="number" id="nvz_horas" min="0.5" step="0.5" inputmode="decimal" placeholder="Ej: 4">
-          <span class="hint">USD 50/hora</span>
+          <span class="hint">USD 50/hora. Si pasa las 4 horas, la comida se suma sola.</span>
         </div>
         <div class="field">
           <label>Kil&oacute;metros desde el taller</label>
           <input type="number" id="nvz_km" min="0" inputmode="numeric" placeholder="Ej: 12">
           <span class="hint">1 litro cada 15 km &mdash; se calcula con el precio ANCAP del d&iacute;a</span>
         </div>
-        <div class="field">
-          <label>&iquest;Pasa las 4 horas de trabajo?</label>
-          <select id="nvz_comida">
-            <option value="auto">Detectar autom&aacute;ticamente</option>
-            <option value="si">S&iacute; (incluir $500 UYU comida)</option>
-            <option value="no">No</option>
-          </select>
-        </div>
       </section>
 
       <!-- NOTAS -->
       <section class="step" data-step="notas">
-        <div class="step-eyebrow">&Uacute;ltimo paso</div>
+        <div class="step-eyebrow">Etapa 3 &middot; Mano de obra</div>
         <div class="step-title">Notas de la visita</div>
         <p class="step-sub">Pon&eacute; ac&aacute; todo lo relevante en un solo lugar.</p>
 
@@ -1555,13 +1555,22 @@
   document.getElementById('nvz_alarma_marca').addEventListener('change', function(){
     var marca = this.value;
     document.getElementById('nvz_alarma_conexion_wrap').style.display = marca === 'Intelbras' ? 'block' : 'none';
-    if (marca !== 'Intelbras') document.getElementById('nvz_alarma_cable_wrap').style.display = 'none';
-    else toggleAlarmaCable();
   });
-  document.getElementById('nvz_alarma_conexion').addEventListener('change', toggleAlarmaCable);
-  function toggleAlarmaCable(){
+
+  // ---- campos de Etapa 2 que dependen de los sistemas elegidos ----
+  // Cableado y UPS muestran solo las filas de los sistemas tildados (data-sys="<id del checkbox>").
+  // El cable UTP de alarma aparece solo si es Intelbras cableada o mixta.
+  function alarmaLlevaCable(){
     var conexion = val('nvz_alarma_conexion');
-    document.getElementById('nvz_alarma_cable_wrap').style.display = (conexion === 'cableada' || conexion === 'mixta') ? 'block' : 'none';
+    if (!chk('nvz_tipo_alarma')) return false;
+    if (val('nvz_alarma_marca') === 'Hikvision AX PRO Hibrida') return true;
+    return val('nvz_alarma_marca') === 'Intelbras' && (conexion === 'cableada' || conexion === 'mixta');
+  }
+  function aplicarVisibilidadSistemas(){
+    document.querySelectorAll('#nvz [data-sys]').forEach(function(el){
+      el.style.display = chk(el.getAttribute('data-sys')) ? '' : 'none';
+    });
+    document.getElementById('nvz_alarma_cable_wrap').style.display = alarmaLlevaCable() ? 'block' : 'none';
   }
 
   // ---- daisa conditional ----
@@ -1572,8 +1581,7 @@
   // ---- datos JSON estructurado (onix-visita-v1) ----
   function construirDatosJSON(){
     var horas = numVal('nvz_horas');
-    var comidaVal = val('nvz_comida');
-    var incluirComida = comidaVal === 'si' || (comidaVal === 'auto' && horas > 4);
+    var incluirComida = horas > 4;
 
     return {
       _schema: 'onix-visita-v1',
@@ -1591,7 +1599,7 @@
       },
       wifi: !chk('nvz_tipo_wifi') ? null : {
         camaras: numVal('nvz_wifi_camaras'), camaras_ext: numVal('nvz_wifi_camaras_ext'), camaras_int: numVal('nvz_wifi_camaras_int'),
-        sd: val('nvz_wifi_sd') || null, repetidor: val('nvz_wifi_repetidor'), cable_corriente: numVal('nvz_wifi_cable'),
+        sd: val('nvz_wifi_sd') || null, repetidor: numVal('nvz_red_repetidor') > 0 ? 'si' : 'no', cable_corriente: numVal('nvz_wifi_cable'),
         marca: val('nvz_wifi_marca') || null, ups: val('nvz_wifi_ups')
       },
       ip: !chk('nvz_tipo_ip') ? null : {
@@ -1610,7 +1618,8 @@
       },
       alarma: !chk('nvz_tipo_alarma') ? null : {
         marca: val('nvz_alarma_marca') || null,
-        conexion: (val('nvz_alarma_marca').toLowerCase().indexOf('hikvision') !== -1) ? 'inalambrica' : (val('nvz_alarma_conexion') || null),
+        conexion: val('nvz_alarma_marca') === 'Hikvision AX PRO Hibrida' ? 'mixta'
+          : (val('nvz_alarma_marca').toLowerCase().indexOf('hikvision') !== -1) ? 'inalambrica' : (val('nvz_alarma_conexion') || null),
         cable_utp: numVal('nvz_alarma_cable_utp'), central: val('nvz_alarma_central'),
         sensor_puerta: numVal('nvz_alarma_sensor_puerta'), sensor_mov_int: numVal('nvz_alarma_sensor_mov_int'),
         sensor_mov_ext: numVal('nvz_alarma_sensor_mov_ext'), sirena: numVal('nvz_alarma_sirena'),
@@ -1635,6 +1644,10 @@
         metros: numVal('nvz_daisa_metros'), ducto_metros: numVal('nvz_ducto_metros'), gabinete: val('nvz_gabinete'),
         codos: numVal('nvz_daisa_codos'), grampas: numVal('nvz_daisa_grampas'), uniones: numVal('nvz_daisa_uniones'),
         corrugados: numVal('nvz_daisa_corrugados')
+      },
+      red: {
+        repetidor: numVal('nvz_red_repetidor'), router: numVal('nvz_red_router'), access_point: numVal('nvz_red_ap'),
+        obs: val('nvz_red_obs') || null
       },
       logistica: { horas: horas, km: numVal('nvz_km'), comida: incluirComida, extras_usd: 100 },
       presupuesto: { propuestas: propuestasVal(), iva_mano_obra: chk('nvz_iva_mano_obra') },
@@ -1671,7 +1684,6 @@
       out += 'Camaras de exterior (IP67): ' + (val('nvz_wifi_camaras_ext') || '0') + '\n';
       out += 'Camaras de interior: ' + (val('nvz_wifi_camaras_int') || '0') + '\n';
       out += 'Tarjeta de memoria por camara: ' + (val('nvz_wifi_sd') || 'a definir segun precio') + '\n';
-      out += 'Repetidor WiFi necesario: ' + val('nvz_wifi_repetidor') + '\n';
       out += 'Metros de cable de corriente: ' + (val('nvz_wifi_cable') || 'a confirmar en visita') + '\n';
       if (val('nvz_wifi_marca')) out += 'Marcas/modelos preferidos: ' + val('nvz_wifi_marca') + '\n';
       out += 'UPS: ' + val('nvz_wifi_ups') + '\n\n';
@@ -1713,7 +1725,10 @@
       out += '--- SISTEMA DE ALARMA ---\n';
       out += 'Marca: ' + (val('nvz_alarma_marca') || 'a definir') + '\n';
       var marcaAlarma = val('nvz_alarma_marca');
-      if (marcaAlarma === 'Hikvision AX PRO') {
+      if (marcaAlarma === 'Hikvision AX PRO Hibrida') {
+        out += 'Tipo de conexion: Hibrida (zonas cableadas + inalambricas)\n';
+        out += 'Metros de cable UTP: ' + (val('nvz_alarma_cable_utp') || '0') + '\n';
+      } else if (marcaAlarma === 'Hikvision AX PRO') {
         out += 'Tipo de conexion: Inalambrica\n';
       } else if (marcaAlarma === 'Intelbras') {
         out += 'Tipo de conexion: ' + (val('nvz_alarma_conexion') || 'a definir') + '\n';
@@ -1768,13 +1783,17 @@
       out += 'Corrugados para daisa: ' + val('nvz_daisa_corrugados') + '\n';
     }
     out += '\n';
+    out += '--- RED (ROUTERS / TP-LINK) ---\n';
+    out += 'Repetidores WiFi: ' + (val('nvz_red_repetidor') || '0') + '\n';
+    out += 'Routers: ' + (val('nvz_red_router') || '0') + '\n';
+    out += 'Access points: ' + (val('nvz_red_ap') || '0') + '\n';
+    if (val('nvz_red_obs')) out += 'Observaciones de red: ' + val('nvz_red_obs') + '\n';
+    out += '\n';
     out += '--- MANO DE OBRA Y LOGISTICA ---\n';
     out += 'Horas de trabajo: ' + val('nvz_horas') + '\n';
     out += 'Kilometros desde el taller: ' + val('nvz_km') + '\n';
     var horas2 = parseFloat(val('nvz_horas')) || 0;
-    var comidaVal2 = val('nvz_comida');
-    var incluirComida2 = comidaVal2 === 'si' || (comidaVal2 === 'auto' && horas2 > 4);
-    out += 'Incluir comida ($500 UYU)?: ' + (incluirComida2 ? 'Si' : 'No') + '\n';
+    out += 'Incluir comida ($500 UYU)?: ' + (horas2 > 4 ? 'Si (pasa las 4 h)' : 'No') + '\n';
     out += 'Extras fijos: USD 100 (siempre)\n\n';
     out += '--- PREFERENCIAS DEL PRESUPUESTO (las define Bruno) ---\n';
     out += 'Cantidad de propuestas: ' + (propuestasVal() ? propuestasVal() : 'a criterio del agente') + '\n';
@@ -1805,6 +1824,12 @@
       '</div>';
 
     html += '<div class="summary-block"><h4>Sistemas</h4><div class="summary-chip-row">' + (chips || '<span class="summary-chip">Ninguno seleccionado</span>') + '</div></div>';
+
+    var red = [];
+    if (numVal('nvz_red_repetidor') > 0) red.push(val('nvz_red_repetidor') + ' repetidor(es)');
+    if (numVal('nvz_red_router') > 0) red.push(val('nvz_red_router') + ' router(s)');
+    if (numVal('nvz_red_ap') > 0) red.push(val('nvz_red_ap') + ' access point(s)');
+    if (red.length) html += '<div class="summary-block"><h4>Red</h4><p>' + red.join(' - ') + '</p></div>';
 
     html += '<div class="summary-block"><h4>Mano de obra y logistica</h4>' +
       '<p>' + (val('nvz_horas') || '0') + ' h de trabajo - ' + (val('nvz_km') || '0') + ' km desde el taller</p>' +
@@ -1880,25 +1905,29 @@
   });
 
   // ---- wizard: pasos y navegacion ----
+  // stage: 1 = Equipos, 2 = Instalacion (cableado, UPS, red), 3 = Mano de obra
   var STEP_DEFS = [
-    { id: 'cliente' },
-    { id: 'sistemas' },
-    { id: 'wifi', show: function(){ return chk('nvz_tipo_wifi'); } },
-    { id: 'ip', show: function(){ return chk('nvz_tipo_ip'); } },
-    { id: 'analog', show: function(){ return chk('nvz_tipo_analog'); } },
-    { id: 'video', show: function(){ return chk('nvz_tipo_video'); } },
-    { id: 'alarma', show: function(){ return chk('nvz_tipo_alarma'); } },
-    { id: 'portero2h', show: function(){ return chk('nvz_tipo_portero2h'); } },
-    { id: 'ctrlacceso', show: function(){ return chk('nvz_tipo_control_acceso'); } },
-    { id: 'daisa' },
-    { id: 'logistica' },
-    { id: 'notas' },
-    { id: 'resumen' }
+    { id: 'cliente', stage: 1 },
+    { id: 'sistemas', stage: 1 },
+    { id: 'wifi', stage: 1, show: function(){ return chk('nvz_tipo_wifi'); } },
+    { id: 'ip', stage: 1, show: function(){ return chk('nvz_tipo_ip'); } },
+    { id: 'analog', stage: 1, show: function(){ return chk('nvz_tipo_analog'); } },
+    { id: 'video', stage: 1, show: function(){ return chk('nvz_tipo_video'); } },
+    { id: 'alarma', stage: 1, show: function(){ return chk('nvz_tipo_alarma'); } },
+    { id: 'portero2h', stage: 1, show: function(){ return chk('nvz_tipo_portero2h'); } },
+    { id: 'ctrlacceso', stage: 1, show: function(){ return chk('nvz_tipo_control_acceso'); } },
+    { id: 'cableado', stage: 2 },
+    { id: 'respaldo', stage: 2 },
+    { id: 'red', stage: 2 },
+    { id: 'logistica', stage: 3 },
+    { id: 'notas', stage: 3 },
+    { id: 'resumen', stage: 3 }
   ];
+  var STAGE_NAMES = { 1: 'Equipos', 2: 'Instalaci\u00f3n', 3: 'Mano de obra' };
 
   var REQUIRED_FIELD = {
     cliente: { field: 'nvz_cliente_nombre', box: 'nvz_f_cliente_nombre', msg: 'Completa el nombre del cliente' },
-    sistemas: { custom: function(){ return STEP_DEFS.slice(2, 9).some(function(s){ return s.show && s.show(); }) || Object.keys(NOMBRE_SISTEMA_CHIP).some(chk); }, msg: 'Selecciona al menos un tipo de sistema' },
+    sistemas: { custom: function(){ return Object.keys(NOMBRE_SISTEMA_CHIP).some(chk); }, msg: 'Selecciona al menos un tipo de sistema' },
     wifi: { field: 'nvz_wifi_camaras', box: 'nvz_f_wifi_camaras', msg: 'Completa la cantidad de camaras' },
     ip: { field: 'nvz_ip_camaras', box: 'nvz_f_ip_camaras', msg: 'Completa la cantidad de camaras' },
     analog: { field: 'nvz_analog_camaras', box: 'nvz_f_analog_camaras', msg: 'Completa la cantidad de camaras' },
@@ -1940,8 +1969,17 @@
     document.querySelectorAll('#nvz .step').forEach(function(el){ el.classList.remove('active'); });
     document.querySelector('#nvz .step[data-step="' + currentStepId + '"]').classList.add('active');
 
+    var stage = vis[idx].stage;
+    var enEtapa = vis.filter(function(s){ return s.stage === stage; });
+    var idxEtapa = enEtapa.findIndex(function(s){ return s.id === currentStepId; });
     document.getElementById('nvzProgressFill').style.width = ((idx + 1) / vis.length * 100) + '%';
-    document.getElementById('nvzProgressLabel').textContent = 'Paso ' + (idx + 1) + ' de ' + vis.length;
+    document.getElementById('nvzProgressLabel').textContent = 'Etapa ' + stage + ' de 3 \u00b7 ' + STAGE_NAMES[stage] + ' \u2014 paso ' + (idxEtapa + 1) + ' de ' + enEtapa.length;
+    document.querySelectorAll('#nvzStageRow span').forEach(function(el){
+      var n = parseInt(el.getAttribute('data-stage'), 10);
+      el.classList.toggle('active', n === stage);
+      el.classList.toggle('done', n < stage);
+    });
+    aplicarVisibilidadSistemas();
     document.getElementById('nvzBtnBack').classList.toggle('hidden', idx === 0);
 
     var btnNext = document.getElementById('nvzBtnNext');
@@ -1991,7 +2029,6 @@
     });
     document.querySelectorAll('#nvz select').forEach(function(el){ el.selectedIndex = 0; });
     document.getElementById('nvz_alarma_conexion_wrap').style.display = 'none';
-    document.getElementById('nvz_alarma_cable_wrap').style.display = 'none';
     document.getElementById('nvz_daisa_accesorios_row').style.display = 'none';
     document.getElementById('nvzDetailPre').classList.remove('show');
     document.getElementById('nvzBtnToggleDetail').textContent = 'Ver detalle tecnico completo \u25be';
