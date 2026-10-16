@@ -742,6 +742,7 @@
             <option value="">Seleccionar</option>
             <option value="Hikvision AX PRO">Hikvision AX PRO (inal&aacute;mbrica)</option>
             <option value="Hikvision AX PRO Hibrida">Hikvision AX PRO H&iacute;brida (cableada + inal&aacute;mbrica)</option>
+            <option value="AJAX">AJAX (inal&aacute;mbrica)</option>
             <option value="Intelbras">Intelbras</option>
           </select>
         </div>
@@ -1824,7 +1825,7 @@
       alarma: !chk('nvz_tipo_alarma') ? null : {
         marca: val('nvz_alarma_marca') || null,
         conexion: val('nvz_alarma_marca') === 'Hikvision AX PRO Hibrida' ? 'mixta'
-          : (val('nvz_alarma_marca').toLowerCase().indexOf('hikvision') !== -1) ? 'inalambrica' : (val('nvz_alarma_conexion') || null),
+          : (val('nvz_alarma_marca') === 'AJAX' || val('nvz_alarma_marca').toLowerCase().indexOf('hikvision') !== -1) ? 'inalambrica' : (val('nvz_alarma_conexion') || null),
         cable_utp: numVal('nvz_alarma_cable_utp'), central: val('nvz_alarma_central'),
         sensor_puerta: numVal('nvz_alarma_sensor_puerta'), sensor_mov_int: numVal('nvz_alarma_sensor_mov_int'),
         sensor_mov_ext: numVal('nvz_alarma_sensor_mov_ext'), sirena: numVal('nvz_alarma_sirena'),
@@ -1935,7 +1936,7 @@
       if (marcaAlarma === 'Hikvision AX PRO Hibrida') {
         out += 'Tipo de conexion: Hibrida (zonas cableadas + inalambricas)\n';
         out += 'Metros de cable UTP: ' + (val('nvz_alarma_cable_utp') || '0') + '\n';
-      } else if (marcaAlarma === 'Hikvision AX PRO') {
+      } else if (marcaAlarma === 'Hikvision AX PRO' || marcaAlarma === 'AJAX') {
         out += 'Tipo de conexion: Inalambrica\n';
       } else if (marcaAlarma === 'Intelbras') {
         out += 'Tipo de conexion: ' + (val('nvz_alarma_conexion') || 'a definir') + '\n';
