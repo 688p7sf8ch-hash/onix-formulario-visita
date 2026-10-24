@@ -1215,12 +1215,16 @@
     var estadoApi = estado === 'pendiente_aprobacion' ? 'pendiente_aprobacion,necesita_cambios' : estado;
     return apiGet({ presupuestos: 1, estado: estadoApi }).then(function(res){
         var items = (res && res.presupuestos) || [];
+        // Si el refresco trae lo mismo que ya esta en pantalla no se redibuja:
+        // el poll de 15 s le borraba a Bruno lo que estaba escribiendo (2026-10-24).
+        var sinCambios = JSON.stringify(items) === JSON.stringify(presupuestosCache[estado]) &&
+          document.querySelector('.panel[data-panel="' + estado + '"] .card-list');
         presupuestosCache[estado] = items;
         cacheGuardar(estado, items);
         if (estado === 'pendiente_aprobacion') document.getElementById('n-pendiente_aprobacion').textContent = items.length;
         if (estado === 'aprobado') document.getElementById('n-aprobado').textContent = items.length;
 
-        renderPanel(estado);
+        if (!sinCambios) renderPanel(estado);
 
         if (estado === 'aprobado') {
           if (items.some(function(p){ return !p.pdf_url; })) {
@@ -1291,8 +1295,56 @@
       listEl.innerHTML = '<div class="empty">Sin resultados' + (q ? ' para "' + escapeHtml(q) + '"' : '') + '.</div>';
       return;
     }
+    var estadoForm = leerEstadoTarjetas(listEl);
     listEl.innerHTML = filtrados.map(function(p){ return renderCard(p, estado); }).join('');
     bindCardEvents(listEl, estado);
+    restaurarEstadoTarjetas(listEl, estadoForm);
+  }
+
+  // Lo que Bruno tiene a medio escribir en cada tarjeta (comentario, datos del
+  // bonus, foco y cursor) sobrevive a que la lista se vuelva a dibujar.
+  function leerEstadoTarjetas(listEl){
+    var porId = {};
+    listEl.querySelectorAll('.card').forEach(function(card){
+      var campos = {};
+      card.querySelectorAll('textarea, input').forEach(function(el){
+        if (el.className) campos[el.className] = el.value;
+      });
+      var form = card.querySelector('.bonus-form');
+      porId[card.dataset.id] = { campos: campos, bonusAbierto: !!(form && !form.hidden) };
+    });
+    var act = document.activeElement;
+    var foco = null;
+    if (act && listEl.contains(act) && act.className && act.closest('.card')) {
+      foco = { id: act.closest('.card').dataset.id, clase: act.className, ini: act.selectionStart, fin: act.selectionEnd };
+    }
+    return { porId: porId, foco: foco, scrollY: window.scrollY };
+  }
+
+  function restaurarEstadoTarjetas(listEl, st){
+    listEl.querySelectorAll('.card').forEach(function(card){
+      var prev = st.porId[card.dataset.id];
+      if (!prev) return;
+      Object.keys(prev.campos).forEach(function(cls){
+        var el = card.querySelector('[class="' + cls + '"]');
+        if (el) el.value = prev.campos[cls];
+      });
+      var form = card.querySelector('.bonus-form');
+      if (form && prev.bonusAbierto) {
+        form.hidden = false;
+        var btn = card.querySelector('button[data-accion="listo"]');
+        if (btn) btn.textContent = 'Confirmar aprobación';
+      }
+    });
+    if (st.foco) {
+      var card = listEl.querySelector('.card[data-id="' + st.foco.id + '"]');
+      var el = card && card.querySelector('[class="' + st.foco.clase + '"]');
+      if (el) {
+        el.focus({ preventScroll: true });
+        try { if (st.foco.ini != null) el.setSelectionRange(st.foco.ini, st.foco.fin); } catch (e) {}
+      }
+    }
+    window.scrollTo(0, st.scrollY);
   }
 
   // Lista de items con link a cada producto, dentro de una opcion - para que
