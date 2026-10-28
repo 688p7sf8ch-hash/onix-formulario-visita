@@ -457,6 +457,11 @@
           <input type="text" id="nvz_cliente_direccion" placeholder="Ej: Av. 18 de Julio 1234, Montevideo" autocomplete="off">
         </div>
         <div class="field">
+          <label>Tel&eacute;fono</label>
+          <input type="tel" id="nvz_cliente_telefono" placeholder="Ej: 099 123 456" autocomplete="off">
+          <input type="hidden" id="nvz_otimify_contact_id">
+        </div>
+        <div class="field">
           <label>Fecha de visita</label>
           <input type="date" id="nvz_fecha_visita">
         </div>
@@ -1173,14 +1178,14 @@
             '<p class="cita-nombre">' + escapeHtml(c.nombre || 'Sin nombre') + '</p>' +
             direccionHtml +
             '<p class="cita-fecha">' + fechaCorta(c.inicio) + '</p>' +
-            '<button type="button" class="btn-agregar-datos" data-nombre="' + escapeHtml(c.nombre || '') + '" data-direccion="' + escapeHtml(c.direccion || '') + '">Agregar datos</button>' +
+            '<button type="button" class="btn-agregar-datos" data-nombre="' + escapeHtml(c.nombre || '') + '" data-direccion="' + escapeHtml(c.direccion || '') + '" data-telefono="' + escapeHtml(c.telefono || '') + '" data-contact-id="' + escapeHtml(c.contactId || '') + '">Agregar datos</button>' +
             '</div>';
         }).join('');
         wrap.querySelectorAll('.btn-agregar-datos').forEach(function(btn){
           btn.addEventListener('click', function(){
             mostrarWizardVisita();
             if (window.prellenarWizardVisita) {
-              window.prellenarWizardVisita(btn.dataset.nombre, btn.dataset.direccion);
+              window.prellenarWizardVisita(btn.dataset.nombre, btn.dataset.direccion, btn.dataset.telefono, btn.dataset.contactId);
             }
           });
         });
@@ -1846,6 +1851,8 @@
       cliente: {
         nombre: val('nvz_cliente_nombre'),
         direccion: val('nvz_cliente_direccion'),
+        telefono: val('nvz_cliente_telefono'),
+        otimify_contact_id: val('nvz_otimify_contact_id'),
         fecha_visita: val('nvz_fecha_visita'),
         moneda_preferida: val('nvz_moneda'),
         presupuesto_cliente: numOrNull('nvz_presupuesto_cliente')
@@ -1931,6 +1938,8 @@
     var out = '=== DATOS DE VISITA TECNICA - ONIX SYSTEM ===\n\n';
     out += 'CLIENTE: ' + val('nvz_cliente_nombre') + '\n';
     out += 'DIRECCION: ' + val('nvz_cliente_direccion') + '\n';
+    out += 'TELEFONO: ' + (val('nvz_cliente_telefono') || 'No indicado') + '\n';
+    if (val('nvz_otimify_contact_id')) out += 'OTIMIFY CONTACT ID: ' + val('nvz_otimify_contact_id') + '\n';
     out += 'FECHA DE VISITA: ' + val('nvz_fecha_visita') + '\n';
     out += 'MONEDA PREFERIDA: ' + val('nvz_moneda') + '\n';
     out += 'PRESUPUESTO DISPONIBLE DEL CLIENTE: ' + (val('nvz_presupuesto_cliente') || 'No indicado') + '\n\n';
@@ -2323,6 +2332,9 @@
       else { el.value = el.defaultValue; }
     });
     document.querySelectorAll('#nvz select').forEach(function(el){ el.selectedIndex = 0; });
+    // En un input hidden defaultValue sigue a value: hay que vaciarlo a mano
+    // para que una visita cargada a mano no herede el contacto de la anterior.
+    document.getElementById('nvz_otimify_contact_id').value = '';
     document.getElementById('nvz_alarma_conexion_wrap').style.display = 'none';
     document.getElementById('nvz_daisa_accesorios_row').style.display = 'none';
     document.getElementById('nvzDetailPre').classList.remove('show');
@@ -2337,14 +2349,17 @@
   }
   window.resetWizardVisita = resetWizard;
 
-  // Autocompleta nombre/direccion cuando se abre el wizard desde el boton
-  // "Agregar datos" de una cita del calendario de Otimify (ver
+  // Autocompleta nombre/direccion/telefono cuando se abre el wizard desde el
+  // boton "Agregar datos" de una cita del calendario de Otimify (ver
   // cargarCitasCalendario en el script principal). Se llama DESPUES de
-  // resetWizard (mostrarWizardVisita ya lo hizo), asi que solo pisa esos dos
-  // campos puntuales.
-  function prellenarWizardVisita(nombre, direccion){
+  // resetWizard (mostrarWizardVisita ya lo hizo), asi que solo pisa esos
+  // campos puntuales. El contactId de Otimify viaja oculto en la visita para
+  // despues cruzar presupuesto <-> oportunidad (alta de proyectos en Mango).
+  function prellenarWizardVisita(nombre, direccion, telefono, contactId){
     if (nombre) document.getElementById('nvz_cliente_nombre').value = nombre;
     if (direccion) document.getElementById('nvz_cliente_direccion').value = direccion;
+    if (telefono) document.getElementById('nvz_cliente_telefono').value = telefono;
+    if (contactId) document.getElementById('nvz_otimify_contact_id').value = contactId;
   }
   window.prellenarWizardVisita = prellenarWizardVisita;
 
