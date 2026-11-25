@@ -706,6 +706,7 @@
           <option value="Otra">Otra (aclarar en notas)</option>
         </select>
       </div>
+      <div class="field"><label>Tags / llaveros RFID</label><input type="number" id="video_tags" min="0" value="0" inputmode="numeric" placeholder="Ej: 10"></div>
       <div class="field">
         <label>Observaciones específicas</label>
         <input type="text" id="video_obs" placeholder="Ej: edificio, casa, cantidad de pisos">
@@ -802,6 +803,7 @@
           <option value="Otra">Otra (aclarar en notas)</option>
         </select>
       </div>
+      <div class="field"><label>Tags / llaveros RFID</label><input type="number" id="portero2h_tags" min="0" value="0" inputmode="numeric" placeholder="Ej: 10"></div>
       <div class="field">
         <label>Observaciones específicas</label>
         <input type="text" id="portero2h_obs" placeholder="Ej: cantidad de pisos, frente a empotrar/sobreponer">
@@ -1099,7 +1101,7 @@
       },
       video: !chk('tipo_video') ? null : {
         pantallas: numVal('video_pantallas'), cerradura: val('video_cerradura'), cable: numVal('video_cable'),
-        marca: val('video_marca') || null, obs: val('video_obs') || null, ups: val('video_ups')
+        marca: val('video_marca') || null, obs: val('video_obs') || null, tags: numVal('video_tags'), ups: val('video_ups')
       },
       alarma: !chk('tipo_alarma') ? null : {
         marca: val('alarma_marca') || null,
@@ -1112,7 +1114,7 @@
       },
       portero2h: !chk('tipo_portero2h') ? null : {
         aptos: numVal('portero2h_aptos'), cerradura: val('portero2h_cerradura'), cable: numVal('portero2h_cable'),
-        marca: val('portero2h_marca') || null, obs: val('portero2h_obs') || null, ups: val('portero2h_ups')
+        marca: val('portero2h_marca') || null, obs: val('portero2h_obs') || null, tags: numVal('portero2h_tags'), ups: val('portero2h_ups')
       },
       control_acceso: !chk('tipo_control_acceso') ? null : {
         puertas: numVal('ctrlacceso_puertas'), sentido: val('ctrlacceso_sentido'), cerradura: val('ctrlacceso_cerradura'),
@@ -1215,6 +1217,7 @@
       out += 'Tipo de cerradura: ' + val('video_cerradura') + '\n';
       out += 'Metros de cable: ' + (val('video_cable') || '0') + '\n';
       if (val('video_marca')) out += 'Marca/modelo preferido: ' + val('video_marca') + '\n';
+      if (numVal('video_tags') > 0) out += 'Tags / llaveros RFID: ' + numVal('video_tags') + '\n';
       if (val('video_obs')) out += 'Observaciones: ' + val('video_obs') + '\n';
       out += 'UPS: ' + val('video_ups') + '\n\n';
     }
@@ -1247,6 +1250,7 @@
       out += 'Tipo de cerradura: ' + val('portero2h_cerradura') + '\n';
       out += 'Metros de cable: ' + (val('portero2h_cable') || '0') + '\n';
       if (val('portero2h_marca')) out += 'Marca/modelo preferido: ' + val('portero2h_marca') + '\n';
+      if (numVal('portero2h_tags') > 0) out += 'Tags / llaveros RFID: ' + numVal('portero2h_tags') + '\n';
       if (val('portero2h_obs')) out += 'Observaciones: ' + val('portero2h_obs') + '\n';
       out += 'UPS: ' + val('portero2h_ups') + '\n\n';
     }

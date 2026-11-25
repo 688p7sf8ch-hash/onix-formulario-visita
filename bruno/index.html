@@ -727,6 +727,7 @@
             <option value="Otra">Otra (aclarar en notas)</option>
           </select>
         </div>
+        <div class="field"><label>Tags / llaveros RFID</label><input type="number" id="nvz_video_tags" min="0" value="0" inputmode="numeric" placeholder="Ej: 10"></div>
         <div class="field">
           <label>Observaciones espec&iacute;ficas</label>
           <input type="text" id="nvz_video_obs" placeholder="Ej: edificio, casa, cantidad de pisos">
@@ -811,6 +812,7 @@
             <option value="Otra">Otra (aclarar en notas)</option>
           </select>
         </div>
+        <div class="field"><label>Tags / llaveros RFID</label><input type="number" id="nvz_portero2h_tags" min="0" value="0" inputmode="numeric" placeholder="Ej: 10"></div>
         <div class="field">
           <label>Observaciones espec&iacute;ficas</label>
           <input type="text" id="nvz_portero2h_obs" placeholder="Ej: cantidad de pisos, frente a empotrar/sobreponer">
@@ -1879,7 +1881,7 @@
       },
       video: !chk('nvz_tipo_video') ? null : {
         pantallas: numVal('nvz_video_pantallas'), cerradura: val('nvz_video_cerradura'), electroiman_lb: electroimanLb('video'), cable: numVal('nvz_video_cable'),
-        marca: val('nvz_video_marca') || null, obs: val('nvz_video_obs') || null, ups: val('nvz_video_ups')
+        marca: val('nvz_video_marca') || null, obs: val('nvz_video_obs') || null, tags: numVal('nvz_video_tags'), ups: val('nvz_video_ups')
       },
       alarma: !chk('nvz_tipo_alarma') ? null : {
         marca: val('nvz_alarma_marca') || null,
@@ -1893,7 +1895,7 @@
       },
       portero2h: !chk('nvz_tipo_portero2h') ? null : {
         aptos: numVal('nvz_portero2h_aptos'), cerradura: val('nvz_portero2h_cerradura'), electroiman_lb: electroimanLb('portero2h'), cable: numVal('nvz_portero2h_cable'),
-        marca: val('nvz_portero2h_marca') || null, obs: val('nvz_portero2h_obs') || null, ups: val('nvz_portero2h_ups')
+        marca: val('nvz_portero2h_marca') || null, obs: val('nvz_portero2h_obs') || null, tags: numVal('nvz_portero2h_tags'), ups: val('nvz_portero2h_ups')
       },
       control_acceso: !chk('nvz_tipo_control_acceso') ? null : {
         puertas: numVal('nvz_ctrlacceso_puertas'), sentido: val('nvz_ctrlacceso_sentido'), cerradura: val('nvz_ctrlacceso_cerradura'), electroiman_lb: electroimanLb('ctrlacceso'),
@@ -1987,6 +1989,7 @@
       if (llevaElectroiman('video')) out += 'Electroiman: ' + electroimanLb('video') + ' lb\n';
       out += 'Metros de cable: ' + (val('nvz_video_cable') || '0') + '\n';
       if (val('nvz_video_marca')) out += 'Marca/modelo preferido: ' + val('nvz_video_marca') + '\n';
+      if (numVal('nvz_video_tags') > 0) out += 'Tags / llaveros RFID: ' + numVal('nvz_video_tags') + '\n';
       if (val('nvz_video_obs')) out += 'Observaciones: ' + val('nvz_video_obs') + '\n';
       out += 'UPS: ' + val('nvz_video_ups') + '\n\n';
     }
@@ -2023,6 +2026,7 @@
       if (llevaElectroiman('portero2h')) out += 'Electroiman: ' + electroimanLb('portero2h') + ' lb\n';
       out += 'Metros de cable: ' + (val('nvz_portero2h_cable') || '0') + '\n';
       if (val('nvz_portero2h_marca')) out += 'Marca/modelo preferido: ' + val('nvz_portero2h_marca') + '\n';
+      if (numVal('nvz_portero2h_tags') > 0) out += 'Tags / llaveros RFID: ' + numVal('nvz_portero2h_tags') + '\n';
       if (val('nvz_portero2h_obs')) out += 'Observaciones: ' + val('nvz_portero2h_obs') + '\n';
       out += 'UPS: ' + val('nvz_portero2h_ups') + '\n\n';
     }
